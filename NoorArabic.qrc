@@ -1,0 +1,20 @@
+<RCC>
+    <qresource>
+        <file>AboutArabic.qml</file>
+        <file>AboutNahw.qml</file>
+        <file>AboutSarf.qml</file>
+        <file>AnimBlock.qml</file>
+        <file>ArabicPage.qml</file>
+        <file>BookmarksPage.qml</file>
+        <file>ContentDivider.qml</file>
+        <file>HomePage.qml</file>
+        <file>Main.qml</file>
+        <file>NahwPage.qml</file>
+        <file>NoorArabic.qmlproject</file>
+        <file>PrayerTimesPage.qml</file>
+        <file>QuranPage.qml</file>
+        <file>SarfPage.qml</file>
+        <file>SettingsPage.qml</file>
+        <file>SubjectsPage.qml</file>
+    </qresource>
+</RCC>

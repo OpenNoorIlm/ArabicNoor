@@ -1,0 +1,17 @@
+build/
+.qtcreator/
+*.user
+*.qmlc
+*.o
+*.aotstats
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+Makefile
+*.moc
+*.moc.cpp
+*.moc.o
+*.qmltypes
+*.qmlc
+*.jsc
+*.qmlcache

@@ -1,0 +1,21 @@
+import QmlProject 1.1
+
+Project {
+    mainFile: "Main.qml"
+
+    QmlFiles {
+        directory: "."
+    }
+
+    ImageFiles {
+        directory: "."
+    }
+
+    importPaths: [ "." ]
+
+    Environment {
+        QT_QUICK_CONTROLS_STYLE: "Material"
+    }
+
+    mainUiFile: "SubjectsPage.qml"
+}
