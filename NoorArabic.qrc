@@ -8,12 +8,15 @@
         <file>BookmarksPage.qml</file>
         <file>ContentDivider.qml</file>
         <file>HomePage.qml</file>
+        <file>LicensesPage.qml</file>
         <file>Main.qml</file>
         <file>NahwPage.qml</file>
         <file>NoorArabic.qmlproject</file>
         <file>PrayerTimesPage.qml</file>
         <file>QuranPage.qml</file>
         <file>SarfPage.qml</file>
+        <file>SettingRow.qml</file>
+        <file>SettingSectionHeader.qml</file>
         <file>SettingsPage.qml</file>
         <file>SubjectsPage.qml</file>
     </qresource>

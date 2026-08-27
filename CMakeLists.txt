@@ -4,7 +4,7 @@ project(NoorArabic VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Controls)
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.10)
 
@@ -21,6 +21,24 @@ qt_add_qml_module(appNoorArabic
     URI NoorArabic
     QML_FILES
         Main.qml
+        HomePage.qml
+        SubjectsPage.qml
+        QuranPage.qml
+        PrayerTimesPage.qml
+        LessonsPage.qml
+        BookmarksPage.qml
+        SettingsPage.qml
+        SarfPage.qml
+        NahwPage.qml
+        ArabicPage.qml
+        AboutSarf.qml
+        AboutNahw.qml
+        AboutArabic.qml
+        AnimBlock.qml
+        ContentDivider.qml
+        SettingRow.qml
+        SettingSectionHeader.qml
+        LicensesPage.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -35,7 +53,14 @@ set_target_properties(appNoorArabic PROPERTIES
 )
 
 target_link_libraries(appNoorArabic
-    PRIVATE Qt6::Quick Qt6::Controls
+    PRIVATE Qt6::Quick Qt6::QuickControls2
+)
+
+set(QDS_QML_PATH "/home/bismillah/Qt/Tools/QtDesignStudio-4.8.3-preview/qt6_design_studio_reduced_version/qml")
+set(QT_QML_PATH "/home/bismillah/Qt/6.11.2/gcc_64/qml")
+
+set_property(TARGET appNoorArabic PROPERTY
+    ENVIRONMENT "QML_IMPORT_PATH=${QT_QML_PATH}:${QDS_QML_PATH}"
 )
 
 install(TARGETS appNoorArabic
