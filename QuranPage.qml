@@ -17,6 +17,9 @@ Rectangle {
     property bool showTafsir: false
     property bool showTranslit: false
     property bool surahPickerOpen: false
+    property var verses: quranBackend.verses
+
+    Component.onCompleted: quranBackend.loadSurah(selectedSurah)
 
     readonly property var surahNames: [
         "Al-Fatiha","Al-Baqarah","Aali Imran","An-Nisa","Al-Maidah","Al-Anam","Al-Araf","Al-Anfal",
@@ -251,6 +254,7 @@ Rectangle {
                                 quranRoot.selectedSurah = index + 1
                                 quranRoot.selectedSurahName = modelData
                                 quranRoot.surahPickerOpen = false
+                                quranBackend.loadSurah(quranRoot.selectedSurah)
                             }
                         }
                     }
@@ -283,14 +287,14 @@ Rectangle {
             }
 
             Repeater {
-                model: quranRoot.selectedSurah === 1 ? [
+                model: quranRoot.verses.length > 0 ? quranRoot.verses : [
                     { num: 1, arabic: "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِينَ", kanzul: "تمام تعریفیں اللہ کو جو رب ہے سارے جہاں کا", irfan: "All praise is due to Allah, Lord of all the worlds", jalayn: "Praise be to God, Lord of the Worlds", translit: "Alhamdu lillāhi rabb il-ʿālamīn" },
                     { num: 2, arabic: "ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ", kanzul: "بڑا مہربان نہایت رحم والا", irfan: "The Most Gracious, the Most Merciful", jalayn: "The Compassionate, the Merciful", translit: "Ar-raḥmāni r-raḥīm" },
                     { num: 3, arabic: "مَـٰلِكِ يَوۡمِ ٱلدِّينِ", kanzul: "مالک ہے روزِ جزا کا", irfan: "Master of the Day of Judgement", jalayn: "Master of the Day of Judgement", translit: "Māliki yawmi d-dīn" },
                     { num: 4, arabic: "إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ", kanzul: "ہم تجھی کو پوجتے اور تجھی سے مدد مانگتے ہیں", irfan: "You alone we worship and You alone we ask for help", jalayn: "You alone we worship and You alone we ask for help", translit: "Iyyāka naʿbudu wa-iyyāka nastaʿīn" },
                     { num: 5, arabic: "ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ", kanzul: "ہمیں سیدھی راہ چلا", irfan: "Guide us on the Straight Path", jalayn: "Guide us to the straight path", translit: "Ihdinā ṣ-ṣirāṭa l-mustaqīm" },
                     { num: 6, arabic: "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ", kanzul: "راہ ان لوگوں کی جن پر تو نے احسان کیا، نہ ان کی جن پر غضب ہوا اور نہ بھٹکے ہوؤں کی", irfan: "The path of those You have blessed, not of those who earned anger, nor of those who went astray", jalayn: "The path of those You have blessed, not of those who earned anger, nor of those who went astray", translit: "Ṣirāṭa lladhīna anʿamta ʿalayhim ghayri l-maghḍūbi ʿalayhim wa-lā ḍ-ḍāllīn" }
-                ] : [{ num: 1, arabic: "...", kanzul: "Verses will be loaded from C++ backend for Surah " + quranRoot.selectedSurah, irfan: "", jalayn: "", translit: "" }]
+                ]
 
                 delegate: Rectangle {
                     id: verseCard

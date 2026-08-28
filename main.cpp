@@ -2,12 +2,20 @@
 #include <QFile>
 #include <QQmlContext>
 #include <QQmlApplicationEngine>
+#include <QQuickStyle>
+#include "QuranBackend.h"
+#include "PrayerTimesBackend.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    QQuickStyle::setStyle("Material");
 
     QQmlApplicationEngine engine;
+    QuranBackend quranBackend;
+    PrayerTimesBackend prayerTimesBackend;
+    engine.rootContext()->setContextProperty("quranBackend", &quranBackend);
+    engine.rootContext()->setContextProperty("prayerTimesBackend", &prayerTimesBackend);
     engine.addImportPath(QStringLiteral(QDS_QML_IMPORT_PATH));
     engine.addImportPath(QStringLiteral(QT_QML_IMPORT_PATH));
     QFile licenseFile(":/qt/qml/NoorArabic/LICENSE");

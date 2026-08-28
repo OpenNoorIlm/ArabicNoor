@@ -4,7 +4,7 @@ project(NoorArabic VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Network)
 
 qt_standard_project_setup(REQUIRES 6.10)
 
@@ -15,6 +15,8 @@ endif()
 
 qt_add_executable(appNoorArabic
     main.cpp
+    QuranBackend.cpp
+    PrayerTimesBackend.cpp
 )
 
 qt_add_qml_module(appNoorArabic
@@ -56,7 +58,7 @@ set_target_properties(appNoorArabic PROPERTIES
 )
 
 target_link_libraries(appNoorArabic
-    PRIVATE Qt6::Quick Qt6::QuickControls2
+    PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::Network
 )
 
 set(QDS_QML_PATH "/home/bismillah/Qt/Tools/QtDesignStudio-4.8.3-preview/qt6_design_studio_reduced_version/qml")

@@ -14,7 +14,7 @@ Rectangle {
     property string searchQuery: ""
     property int nextPrayerIndex: 4
 
-    readonly property var prayers: [
+    property var prayers: prayerTimesBackend.prayers.length > 0 ? prayerTimesBackend.prayers : [
         { name: "Fajr",    arabic: "الفجر",  time: "5:12 AM",  icon: "🌙", done: true  },
         { name: "Sunrise", arabic: "الشروق", time: "6:28 AM",  icon: "🌅", done: true  },
         { name: "Dhuhr",   arabic: "الظهر",  time: "12:38 PM", icon: "☀️", done: true  },
@@ -22,6 +22,8 @@ Rectangle {
         { name: "Maghrib", arabic: "المغرب", time: "6:42 PM",  icon: "🌇", done: false },
         { name: "Isha",    arabic: "العشاء", time: "8:04 PM",  icon: "🌃", done: false }
     ]
+
+    Component.onCompleted: prayerTimesBackend.loadCity("Mysuru", "India")
 
     // ── Heading ───────────────────────────────────────────────────────────
     Label {
@@ -360,12 +362,12 @@ Rectangle {
                     opacity: 0.18
 
                     property real phase: 0
+                    onPhaseChanged: requestPaint()
 
                     NumberAnimation on phase {
                         from: 0; to: Math.PI * 2
                         duration: 8000; loops: Animation.Infinite
                         running: true
-                        onValueChanged: geoCanvas.requestPaint()
                     }
 
                     onPaint: {

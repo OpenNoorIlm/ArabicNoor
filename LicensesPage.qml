@@ -57,11 +57,9 @@ Rectangle {
                     { name: "NoorArabic", version: "—", license: "MIT License", url: "View included LICENSE file", action: "showLicense" },
                     { name: "Qt Framework", version: "6.11.2", license: "LGPL v3", url: "https://www.qt.io" },
                     { name: "Qt Design Studio", version: "4.8.3", license: "Commercial / GPL v3", url: "https://www.qt.io/product/ui-design-tools" },
-                    { name: "Quran Text (Uthmani)", version: "—", license: "Public Domain", url: "https://tanzil.net" },
-                    { name: "Kanzul Iman Translation", version: "—", license: "Public Domain", url: "" },
-                    { name: "Irfan ul Quran", version: "—", license: "Public Domain", url: "" },
-                    { name: "Tafsir al-Jalalayn", version: "—", license: "Public Domain", url: "" },
-                    { name: "Prayer Time Algorithm (Karachi)", version: "—", license: "MIT", url: "https://praytimes.org" }
+                    { name: "Al Quran Cloud API", version: "v1", license: "Online Quran data service", url: "https://alquran.cloud/api" },
+                    { name: "AlAdhan Prayer Times API", version: "v1", license: "Online prayer-time service", url: "https://aladhan.com/prayer-times-api" },
+                    { name: "Karachi Calculation Method", version: "1", license: "University of Islamic Sciences, Karachi", url: "https://aladhan.com/calculation-methods" }
                 ]
 
                 delegate: Rectangle {

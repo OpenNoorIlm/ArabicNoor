@@ -78,7 +78,8 @@ Rectangle {
         id: settingsMain
 
         ScrollView {
-            anchors.fill: parent
+            width: parent ? parent.width : 0
+            height: parent ? parent.height : 0
             clip: true
 
             Column {
