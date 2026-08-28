@@ -8,6 +8,7 @@ Rectangle {
     width: Screen.width
     height: Screen.height
     color: "#1a1a2e"
+    property var settingsStackView: StackView.view
     Label {
         id: licensesLbl
         text: "📄 Licenses"
@@ -126,7 +127,7 @@ Rectangle {
                                      ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
                             if (modelData.action === "showLicense") {
-                                StackView.view.push("LicenseTextPage.qml")
+                                licensesRoot.settingsStackView.push("LicenseTextPage.qml")
                             } else if (modelData.url !== "") {
                                 Qt.openUrlExternally(modelData.url)
                             }

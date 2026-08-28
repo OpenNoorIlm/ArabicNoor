@@ -62,6 +62,11 @@ target_link_libraries(appNoorArabic
 set(QDS_QML_PATH "/home/bismillah/Qt/Tools/QtDesignStudio-4.8.3-preview/qt6_design_studio_reduced_version/qml")
 set(QT_QML_PATH "/home/bismillah/Qt/6.11.2/gcc_64/qml")
 
+target_compile_definitions(appNoorArabic PRIVATE
+    QDS_QML_IMPORT_PATH="${QDS_QML_PATH}"
+    QT_QML_IMPORT_PATH="${QT_QML_PATH}"
+)
+
 set_property(TARGET appNoorArabic PROPERTY
     ENVIRONMENT "QML_IMPORT_PATH=${QT_QML_PATH}:${QDS_QML_PATH}"
 )

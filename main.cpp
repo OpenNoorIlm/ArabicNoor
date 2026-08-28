@@ -8,6 +8,8 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
+    engine.addImportPath(QStringLiteral(QDS_QML_IMPORT_PATH));
+    engine.addImportPath(QStringLiteral(QT_QML_IMPORT_PATH));
     QFile licenseFile(":/qt/qml/NoorArabic/LICENSE");
     if (!licenseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         licenseFile.setFileName(":/LICENSE");
