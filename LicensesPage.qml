@@ -52,43 +52,7 @@ Rectangle {
 
         Column {
             width: licensesRoot.width - 80
-            spacing: 12
-
-            Label {
-                text: "NoorArabic License"
-                color: "#c9a84c"
-                font.pixelSize: 18
-                font.bold: true
-            }
-
-            Label {
-                text: "This project is distributed under the MIT License."
-                color: "#b7c4df"
-                font.pixelSize: 13
-            }
-
-            ScrollView {
-                width: parent.width
-                height: licensesRoot.height * 0.28
-                clip: true
-                visible: licensesRoot.showProjectLicense && licensesRoot.projectLicenseText !== ""
-
-                TextArea {
-                    width: parent.width
-                    text: licensesRoot.projectLicenseText
-                    readOnly: true
-                    wrapMode: TextArea.Wrap
-                    color: "#d8e2f5"
-                    selectionColor: "#3a5285"
-                    selectedTextColor: "#ffffff"
-                    font.pixelSize: 12
-                    background: Rectangle {
-                        color: "#0d1b36"
-                        radius: 10
-                        border.color: "#1e3a6e"
-                    }
-                }
-            }
+            spacing: 0
 
             Repeater {
                 model: [
@@ -154,6 +118,31 @@ Rectangle {
                             color: "#4a7abf"
                             font.pixelSize: 12
                             font.underline: true
+                        }
+
+                        ScrollView {
+                            width: parent.width
+                            height: Math.min(licensesRoot.height * 0.32, 260)
+                            clip: true
+                            visible: modelData.action === "toggleLicense"
+                                     && licensesRoot.showProjectLicense
+                                     && licensesRoot.projectLicenseText !== ""
+
+                            TextArea {
+                                width: parent.width
+                                text: licensesRoot.projectLicenseText
+                                readOnly: true
+                                wrapMode: TextArea.Wrap
+                                color: "#d8e2f5"
+                                selectionColor: "#3a5285"
+                                selectedTextColor: "#ffffff"
+                                font.pixelSize: 12
+                                background: Rectangle {
+                                    color: "#101f3e"
+                                    radius: 6
+                                    border.color: "#1e3a6e"
+                                }
+                            }
                         }
                     }
 
