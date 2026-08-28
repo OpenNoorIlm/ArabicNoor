@@ -5,8 +5,8 @@ import QtQuick.Studio.DesignEffects
 
 Rectangle {
     id: settingsRoot
-    width: Screen.width
-    height: Screen.height
+    width: parent ? parent.width : Screen.width
+    height: parent ? parent.height : Screen.height
     color: "#1a1a2e"
 
     // ── Toggles state ─────────────────────────────────────────────────────

@@ -5,20 +5,17 @@ import QtQuick.Studio.DesignEffects
 import QtQuick.Studio.Components
 import QtQuick.Timeline 1.0
 
-Rectangle {
+ApplicationWindow {
     id: window
     width: Screen.width
     height: Screen.height
-    color: "#1a1a2e"
-    border.color: "#c9a84c"
-    border.width: 12
+    visible: true
+    visibility: Window.Maximized
 
-    DesignEffect {
-        effects: [
-            DesignDropShadow {
-                color: "#80c9a84c"
-            }
-        ]
+    background: Rectangle {
+        color: "#1a1a2e"
+        border.color: "#c9a84c"
+        border.width: 12
     }
 
     StackView {

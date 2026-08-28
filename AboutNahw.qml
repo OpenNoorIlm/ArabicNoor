@@ -5,8 +5,8 @@ import QtQuick.Studio.DesignEffects
 
 Rectangle {
     id: aboutNahwRoot
-    width: Screen.width
-    height: Screen.height
+    width: parent ? parent.width : Screen.width
+    height: parent ? parent.height : Screen.height
     color: "#1a1a2e"
 
     Label {

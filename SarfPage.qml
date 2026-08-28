@@ -6,8 +6,8 @@ import QtQuick.Studio.Components
 
 Rectangle {
     id: sarfPage
-    width: Screen.width
-    height: Screen.height
+    width: parent ? parent.width : Screen.width
+    height: parent ? parent.height : Screen.height
     color: "#1a1a2e"
 
     Label {
