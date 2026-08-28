@@ -1,6 +1,5 @@
 <RCC>
     <qresource>
-        <file>LICENSE</file>
         <file>AboutArabic.qml</file>
         <file>AboutNahw.qml</file>
         <file>AboutSarf.qml</file>
@@ -9,6 +8,8 @@
         <file>BookmarksPage.qml</file>
         <file>ContentDivider.qml</file>
         <file>HomePage.qml</file>
+        <file>LessonsPage.qml</file>
+        <file>LicenseTextPage.qml</file>
         <file>LicensesPage.qml</file>
         <file>Main.qml</file>
         <file>NahwPage.qml</file>

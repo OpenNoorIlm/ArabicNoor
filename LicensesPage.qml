@@ -8,9 +8,6 @@ Rectangle {
     width: Screen.width
     height: Screen.height
     color: "#1a1a2e"
-    property string projectLicenseText: appLicenseText
-    property bool showProjectLicense: false
-
     Label {
         id: licensesLbl
         text: "📄 Licenses"
@@ -56,7 +53,7 @@ Rectangle {
 
             Repeater {
                 model: [
-                    { name: "NoorArabic", version: "—", license: "MIT License", url: "View included LICENSE file", action: "toggleLicense" },
+                    { name: "NoorArabic", version: "—", license: "MIT License", url: "View included LICENSE file", action: "showLicense" },
                     { name: "Qt Framework", version: "6.11.2", license: "LGPL v3", url: "https://www.qt.io" },
                     { name: "Qt Design Studio", version: "4.8.3", license: "Commercial / GPL v3", url: "https://www.qt.io/product/ui-design-tools" },
                     { name: "Quran Text (Uthmani)", version: "—", license: "Public Domain", url: "https://tanzil.net" },
@@ -119,42 +116,17 @@ Rectangle {
                             font.pixelSize: 12
                             font.underline: true
                         }
-
-                        ScrollView {
-                            width: parent.width
-                            height: Math.min(licensesRoot.height * 0.32, 260)
-                            clip: true
-                            visible: modelData.action === "toggleLicense"
-                                     && licensesRoot.showProjectLicense
-                                     && licensesRoot.projectLicenseText !== ""
-
-                            TextArea {
-                                width: parent.width
-                                text: licensesRoot.projectLicenseText
-                                readOnly: true
-                                wrapMode: TextArea.Wrap
-                                color: "#d8e2f5"
-                                selectionColor: "#3a5285"
-                                selectedTextColor: "#ffffff"
-                                font.pixelSize: 12
-                                background: Rectangle {
-                                    color: "#101f3e"
-                                    radius: 6
-                                    border.color: "#1e3a6e"
-                                }
-                            }
-                        }
                     }
 
                     MouseArea {
                         id: licMouse
                         anchors.fill: parent
                         hoverEnabled: true
-                        cursorShape: (modelData.action === "toggleLicense" || modelData.url !== "")
+                        cursorShape: (modelData.action === "showLicense" || modelData.url !== "")
                                      ? Qt.PointingHandCursor : Qt.ArrowCursor
                         onClicked: {
-                            if (modelData.action === "toggleLicense") {
-                                licensesRoot.showProjectLicense = !licensesRoot.showProjectLicense
+                            if (modelData.action === "showLicense") {
+                                StackView.view.push("LicenseTextPage.qml")
                             } else if (modelData.url !== "") {
                                 Qt.openUrlExternally(modelData.url)
                             }

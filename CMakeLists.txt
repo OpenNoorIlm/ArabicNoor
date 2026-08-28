@@ -39,6 +39,7 @@ qt_add_qml_module(appNoorArabic
         SettingRow.qml
         SettingSectionHeader.qml
         LicensesPage.qml
+        LicenseTextPage.qml
     RESOURCES
         LICENSE
 )
