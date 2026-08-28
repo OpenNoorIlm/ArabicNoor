@@ -39,6 +39,8 @@ qt_add_qml_module(appNoorArabic
         SettingRow.qml
         SettingSectionHeader.qml
         LicensesPage.qml
+    RESOURCES
+        LICENSE
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

@@ -1,5 +1,6 @@
 <RCC>
     <qresource>
+        <file>LICENSE</file>
         <file>AboutArabic.qml</file>
         <file>AboutNahw.qml</file>
         <file>AboutSarf.qml</file>

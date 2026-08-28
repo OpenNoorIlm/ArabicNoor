@@ -1,4 +1,6 @@
 #include <QGuiApplication>
+#include <QFile>
+#include <QQmlContext>
 #include <QQmlApplicationEngine>
 
 int main(int argc, char *argv[])
@@ -6,6 +8,12 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
+    QFile licenseFile(":/qt/qml/NoorArabic/LICENSE");
+    if (!licenseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        licenseFile.setFileName(":/LICENSE");
+        licenseFile.open(QIODevice::ReadOnly | QIODevice::Text);
+    }
+    engine.rootContext()->setContextProperty("appLicenseText", QString::fromUtf8(licenseFile.readAll()));
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

@@ -8,6 +8,8 @@ Rectangle {
     width: Screen.width
     height: Screen.height
     color: "#1a1a2e"
+    property string projectLicenseText: appLicenseText
+    property bool showProjectLicense: false
 
     Label {
         id: licensesLbl
@@ -50,10 +52,47 @@ Rectangle {
 
         Column {
             width: licensesRoot.width - 80
-            spacing: 0
+            spacing: 12
+
+            Label {
+                text: "NoorArabic License"
+                color: "#c9a84c"
+                font.pixelSize: 18
+                font.bold: true
+            }
+
+            Label {
+                text: "This project is distributed under the MIT License."
+                color: "#b7c4df"
+                font.pixelSize: 13
+            }
+
+            ScrollView {
+                width: parent.width
+                height: licensesRoot.height * 0.28
+                clip: true
+                visible: licensesRoot.showProjectLicense && licensesRoot.projectLicenseText !== ""
+
+                TextArea {
+                    width: parent.width
+                    text: licensesRoot.projectLicenseText
+                    readOnly: true
+                    wrapMode: TextArea.Wrap
+                    color: "#d8e2f5"
+                    selectionColor: "#3a5285"
+                    selectedTextColor: "#ffffff"
+                    font.pixelSize: 12
+                    background: Rectangle {
+                        color: "#0d1b36"
+                        radius: 10
+                        border.color: "#1e3a6e"
+                    }
+                }
+            }
 
             Repeater {
                 model: [
+                    { name: "NoorArabic", version: "—", license: "MIT License", url: "View included LICENSE file", action: "toggleLicense" },
                     { name: "Qt Framework", version: "6.11.2", license: "LGPL v3", url: "https://www.qt.io" },
                     { name: "Qt Design Studio", version: "4.8.3", license: "Commercial / GPL v3", url: "https://www.qt.io/product/ui-design-tools" },
                     { name: "Quran Text (Uthmani)", version: "—", license: "Public Domain", url: "https://tanzil.net" },
@@ -122,6 +161,15 @@ Rectangle {
                         id: licMouse
                         anchors.fill: parent
                         hoverEnabled: true
+                        cursorShape: (modelData.action === "toggleLicense" || modelData.url !== "")
+                                     ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: {
+                            if (modelData.action === "toggleLicense") {
+                                licensesRoot.showProjectLicense = !licensesRoot.showProjectLicense
+                            } else if (modelData.url !== "") {
+                                Qt.openUrlExternally(modelData.url)
+                            }
+                        }
                     }
                 }
             }
