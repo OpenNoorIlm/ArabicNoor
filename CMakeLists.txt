@@ -15,7 +15,9 @@ endif()
 
 qt_add_executable(appNoorArabic
     main.cpp
+    QuranBackend.h
     QuranBackend.cpp
+    PrayerTimesBackend.h
     PrayerTimesBackend.cpp
 )
 
