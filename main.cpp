@@ -16,8 +16,10 @@ int main(int argc, char *argv[])
     PrayerTimesBackend prayerTimesBackend;
     engine.rootContext()->setContextProperty("quranBackend", &quranBackend);
     engine.rootContext()->setContextProperty("prayerTimesBackend", &prayerTimesBackend);
+#if !defined(Q_OS_ANDROID)
     engine.addImportPath(QStringLiteral(QDS_QML_IMPORT_PATH));
     engine.addImportPath(QStringLiteral(QT_QML_IMPORT_PATH));
+#endif
     QFile licenseFile(":/qt/qml/NoorArabic/LICENSE");
     if (!licenseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         licenseFile.setFileName(":/LICENSE");

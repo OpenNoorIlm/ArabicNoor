@@ -13,6 +13,7 @@ Rectangle {
     property bool locationSearchMode: false
     property string searchQuery: ""
     property int nextPrayerIndex: 4
+    property var nextPrayer: firstUpcomingPrayer()
 
     property var prayers: prayerTimesBackend.prayers.length > 0 ? prayerTimesBackend.prayers : [
         { name: "Fajr",    arabic: "الفجر",  time: "5:12 AM",  icon: "🌙", done: true  },
@@ -24,6 +25,47 @@ Rectangle {
     ]
 
     Component.onCompleted: prayerTimesBackend.loadCity("Mysuru", "India")
+
+    function loadPrayerLocation(value) {
+        var query = value.trim()
+        if (query.length === 0)
+            return
+
+        prayerRoot.locationText = query
+        prayerRoot.locationSearchMode = false
+        prayerRoot.searchQuery = ""
+        prayerTimesBackend.loadAddress(query)
+    }
+
+    function firstUpcomingPrayer() {
+        for (var i = 0; i < prayerRoot.prayers.length; ++i) {
+            if (!prayerRoot.prayers[i].done)
+                return prayerRoot.prayers[i]
+        }
+        return prayerRoot.prayers.length > 0 ? prayerRoot.prayers[0] : { name: "", time: "", icon: "" }
+    }
+
+    function prayerIcon(name) {
+        if (name === "moon")
+            return "🌙"
+        if (name === "sunrise")
+            return "🌅"
+        if (name === "sun")
+            return "☀"
+        if (name === "cloud-sun")
+            return "☀"
+        if (name === "sunset")
+            return "🌇"
+        if (name === "night")
+            return "🌃"
+        return name
+    }
+
+    Connections {
+        target: prayerTimesBackend
+        function onLocationChanged() { prayerRoot.locationText = prayerTimesBackend.location }
+        function onPrayersChanged() { prayerRoot.nextPrayer = prayerRoot.firstUpcomingPrayer() }
+    }
 
     // ── Heading ───────────────────────────────────────────────────────────
     Label {
@@ -97,8 +139,7 @@ Rectangle {
                             color: "#c9a84c"; font.pixelSize: 14
                             onTextChanged: prayerRoot.searchQuery = text
                             Keys.onReturnPressed: {
-                                if (text !== "") prayerRoot.locationText = text
-                                prayerRoot.locationSearchMode = false
+                                prayerRoot.loadPrayerLocation(text)
                             }
                         }
                         Label {
@@ -129,8 +170,7 @@ Rectangle {
                         MouseArea {
                             id: sb1; anchors.fill: parent; hoverEnabled: true
                             onClicked: {
-                                if (locationInput.text !== "") prayerRoot.locationText = locationInput.text
-                                prayerRoot.locationSearchMode = false
+                                prayerRoot.loadPrayerLocation(locationInput.text)
                             }
                         }
                     }
@@ -147,7 +187,7 @@ Rectangle {
                         MouseArea {
                             id: sb2; anchors.fill: parent; hoverEnabled: true
                             onClicked: {
-                                prayerRoot.locationText = "Auto-detected location"
+                                prayerRoot.loadPrayerLocation("Mysuru, Karnataka, India")
                                 prayerRoot.locationSearchMode = false
                             }
                         }
@@ -179,7 +219,7 @@ Rectangle {
                             Rectangle { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: "#c9a84c"; opacity: 0.08 }
                             MouseArea {
                                 id: sm; anchors.fill: parent; hoverEnabled: true
-                                onClicked: { prayerRoot.locationText = modelData; prayerRoot.locationSearchMode = false }
+                                onClicked: { prayerRoot.loadPrayerLocation(modelData) }
                             }
                         }
                     }
@@ -195,9 +235,9 @@ Rectangle {
 
                 Row {
                     anchors.centerIn: parent; spacing: 16
-                    Label { text: "27 August 2026  •  Thursday"; color: "#7a8aaa"; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: prayerTimesBackend.gregorianDate !== "" ? prayerTimesBackend.gregorianDate : "Loading date"; color: "#7a8aaa"; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
                     Rectangle { width: 1; height: 14; color: "#c9a84c"; opacity: 0.4; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: "3 Safar 1448 AH"; color: "#c9a84c"; font.pixelSize: 13; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: prayerTimesBackend.hijriDate !== "" ? prayerTimesBackend.hijriDate : "Loading Hijri date"; color: "#c9a84c"; font.pixelSize: 13; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
 
@@ -229,13 +269,13 @@ Rectangle {
                     Column {
                         anchors.verticalCenter: parent.verticalCenter; spacing: 2
                         Label { text: "Next Prayer"; color: "#7a8aaa"; font.pixelSize: 11 }
-                        Label { text: "Maghrib  🌇"; color: "#ffffff"; font.pixelSize: 20; font.bold: true }
+                        Label { text: prayerRoot.nextPrayer.name + "  " + prayerRoot.prayerIcon(prayerRoot.nextPrayer.icon); color: "#ffffff"; font.pixelSize: 20; font.bold: true }
                     }
                     Rectangle { width: 1; height: 36; color: "#c9a84c"; opacity: 0.4; anchors.verticalCenter: parent.verticalCenter }
                     Column {
                         anchors.verticalCenter: parent.verticalCenter; spacing: 2
                         Label { text: "Iqama"; color: "#7a8aaa"; font.pixelSize: 11 }
-                        Label { text: "6:42 PM"; color: "#c9a84c"; font.pixelSize: 20; font.bold: true }
+                        Label { text: prayerRoot.nextPrayer.time; color: "#c9a84c"; font.pixelSize: 20; font.bold: true }
                     }
                     Rectangle { width: 1; height: 36; color: "#c9a84c"; opacity: 0.4; anchors.verticalCenter: parent.verticalCenter }
                     Column {
@@ -306,7 +346,7 @@ Rectangle {
                         anchors.right: parent.right; anchors.rightMargin: 16
                         anchors.verticalCenter: parent.verticalCenter; spacing: 0
 
-                        Label { text: modelData.icon; font.pixelSize: 20; width: 36; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: prayerRoot.prayerIcon(modelData.icon); font.pixelSize: 20; width: 36; anchors.verticalCenter: parent.verticalCenter }
 
                         Column {
                             anchors.verticalCenter: parent.verticalCenter; spacing: 1

@@ -11,9 +11,9 @@ Rectangle {
 
     property int selectedSurah: 1
     property string selectedSurahName: "Al-Fatiha"
-    property string selectedTranslation: "Kanzul Iman"
+    property string selectedTranslation: "Uthmani"
     property bool showArabic: true
-    property bool showTranslation: true
+    property bool showTranslation: false
     property bool showTafsir: false
     property bool showTranslit: false
     property bool surahPickerOpen: false
@@ -116,14 +116,14 @@ Rectangle {
             MouseArea { id: surahBtnMouse; anchors.fill: parent; onClicked: quranRoot.surahPickerOpen = !quranRoot.surahPickerOpen }
         }
 
-        // Translation pills
-        Row {
+            // Quran text edition pills
+            Row {
             anchors.right: parent.right; anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             spacing: 6
 
             Repeater {
-                model: ["Kanzul Iman", "Irfan", "Jalayn", "Uthmani"]
+                model: ["Uthmani"]
                 delegate: Rectangle {
                     width: tLbl.implicitWidth + 14; height: 28; radius: 6
                     color: quranRoot.selectedTranslation === modelData ? "#c9a84c" : "#1e3a6e"
@@ -160,7 +160,7 @@ Rectangle {
             Repeater {
                 model: [
                     { label: "ع Arabic", prop: "showArabic" },
-                    { label: "TR Translation", prop: "showTranslation" },
+                    { label: "SRC Source", prop: "showTranslation" },
                     { label: "TF Tafsir", prop: "showTafsir" },
                     { label: "EN Translit", prop: "showTranslit" }
                 ]
@@ -287,14 +287,7 @@ Rectangle {
             }
 
             Repeater {
-                model: quranRoot.verses.length > 0 ? quranRoot.verses : [
-                    { num: 1, arabic: "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِينَ", kanzul: "تمام تعریفیں اللہ کو جو رب ہے سارے جہاں کا", irfan: "All praise is due to Allah, Lord of all the worlds", jalayn: "Praise be to God, Lord of the Worlds", translit: "Alhamdu lillāhi rabb il-ʿālamīn" },
-                    { num: 2, arabic: "ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ", kanzul: "بڑا مہربان نہایت رحم والا", irfan: "The Most Gracious, the Most Merciful", jalayn: "The Compassionate, the Merciful", translit: "Ar-raḥmāni r-raḥīm" },
-                    { num: 3, arabic: "مَـٰلِكِ يَوۡمِ ٱلدِّينِ", kanzul: "مالک ہے روزِ جزا کا", irfan: "Master of the Day of Judgement", jalayn: "Master of the Day of Judgement", translit: "Māliki yawmi d-dīn" },
-                    { num: 4, arabic: "إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ", kanzul: "ہم تجھی کو پوجتے اور تجھی سے مدد مانگتے ہیں", irfan: "You alone we worship and You alone we ask for help", jalayn: "You alone we worship and You alone we ask for help", translit: "Iyyāka naʿbudu wa-iyyāka nastaʿīn" },
-                    { num: 5, arabic: "ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ", kanzul: "ہمیں سیدھی راہ چلا", irfan: "Guide us on the Straight Path", jalayn: "Guide us to the straight path", translit: "Ihdinā ṣ-ṣirāṭa l-mustaqīm" },
-                    { num: 6, arabic: "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ", kanzul: "راہ ان لوگوں کی جن پر تو نے احسان کیا، نہ ان کی جن پر غضب ہوا اور نہ بھٹکے ہوؤں کی", irfan: "The path of those You have blessed, not of those who earned anger, nor of those who went astray", jalayn: "The path of those You have blessed, not of those who earned anger, nor of those who went astray", translit: "Ṣirāṭa lladhīna anʿamta ʿalayhim ghayri l-maghḍūbi ʿalayhim wa-lā ḍ-ḍāllīn" }
-                ]
+                model: quranRoot.verses
 
                 delegate: Rectangle {
                     id: verseCard
@@ -347,10 +340,9 @@ Rectangle {
                         Label {
                             visible: quranRoot.showTranslation
                             width: parent.width - 32
-                            text: quranRoot.selectedTranslation === "Kanzul Iman" ? modelData.kanzul :
-                                  quranRoot.selectedTranslation === "Irfan" ? modelData.irfan : modelData.jalayn
+                            text: "Source: " + modelData.source + " / " + quranRoot.selectedTranslation
                             color: "#c9a84c"; font.pixelSize: 15; wrapMode: Text.WordWrap
-                            horizontalAlignment: quranRoot.selectedTranslation === "Kanzul Iman" ? Text.AlignRight : Text.AlignLeft
+                            horizontalAlignment: Text.AlignLeft
                         }
 
                         Rectangle {
@@ -360,7 +352,7 @@ Rectangle {
                             color: "#0a1428"; radius: 6; border.color: "#2a3a5a"; border.width: 1
                             Label {
                                 id: tfLbl; anchors.fill: parent; anchors.margins: 8
-                                text: "📝 Tafsir for verse " + modelData.num + " — loaded from C++ backend"
+                                text: "Tafsir is not bundled yet. Quran text is loaded from Al Quran Cloud."
                                 color: "#7a8aaa"; font.pixelSize: 13; wrapMode: Text.WordWrap
                             }
                         }

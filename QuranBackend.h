@@ -14,7 +14,15 @@ public:
     QString error() const { return m_error; }
     Q_INVOKABLE void loadSurah(int number);
 signals:
-    void versesChanged(); void loadingChanged(); void errorChanged();
+    void versesChanged();
+    void loadingChanged();
+    void errorChanged();
 private:
-    QNetworkAccessManager m_network; QVariantList m_verses; bool m_loading = false; QString m_error;
+    void setLoading(bool loading);
+    void setError(const QString &error);
+
+    QNetworkAccessManager m_network;
+    QVariantList m_verses;
+    bool m_loading = false;
+    QString m_error;
 };

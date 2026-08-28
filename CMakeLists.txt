@@ -4,7 +4,7 @@ project(NoorArabic VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 Network)
 
 qt_standard_project_setup(REQUIRES 6.10)
 
@@ -59,21 +59,37 @@ set_target_properties(appNoorArabic PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+if(ANDROID)
+    set_target_properties(appNoorArabic PROPERTIES
+        QT_ANDROID_PACKAGE_NAME "org.opennoorilm.noorarabic"
+        QT_ANDROID_APP_NAME "NoorArabic"
+    )
+
+    qt_add_android_permission(appNoorArabic
+        NAME android.permission.INTERNET
+    )
+    qt_add_android_permission(appNoorArabic
+        NAME android.permission.ACCESS_NETWORK_STATE
+    )
+endif()
+
 target_link_libraries(appNoorArabic
-    PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::Network
+    PRIVATE Qt6::Core Qt6::Quick Qt6::QuickControls2 Qt6::Network
 )
 
-set(QDS_QML_PATH "/home/bismillah/Qt/Tools/QtDesignStudio-4.8.3-preview/qt6_design_studio_reduced_version/qml")
-set(QT_QML_PATH "/home/bismillah/Qt/6.11.2/gcc_64/qml")
+if(NOT ANDROID)
+    set(QDS_QML_PATH "/home/bismillah/Qt/Tools/QtDesignStudio-4.8.3-preview/qt6_design_studio_reduced_version/qml")
+    set(QT_QML_PATH "/home/bismillah/Qt/6.11.2/gcc_64/qml")
 
-target_compile_definitions(appNoorArabic PRIVATE
-    QDS_QML_IMPORT_PATH="${QDS_QML_PATH}"
-    QT_QML_IMPORT_PATH="${QT_QML_PATH}"
-)
+    target_compile_definitions(appNoorArabic PRIVATE
+        QDS_QML_IMPORT_PATH="${QDS_QML_PATH}"
+        QT_QML_IMPORT_PATH="${QT_QML_PATH}"
+    )
 
-set_property(TARGET appNoorArabic PROPERTY
-    ENVIRONMENT "QML_IMPORT_PATH=${QT_QML_PATH}:${QDS_QML_PATH}"
-)
+    set_property(TARGET appNoorArabic PROPERTY
+        ENVIRONMENT "QML_IMPORT_PATH=${QT_QML_PATH}:${QDS_QML_PATH}"
+    )
+endif()
 
 install(TARGETS appNoorArabic
     BUNDLE DESTINATION .
