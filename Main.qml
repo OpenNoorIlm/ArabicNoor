@@ -12,6 +12,11 @@ ApplicationWindow {
     visible: true
     visibility: Window.Maximized
 
+    Component.onCompleted: {
+        console.log("Main.qml quranBackend available:", typeof quranBackend !== "undefined" && quranBackend !== null)
+        console.log("Main.qml prayerTimesBackend available:", typeof prayerTimesBackend !== "undefined" && prayerTimesBackend !== null)
+    }
+
     background: Rectangle {
         color: "#1a1a2e"
         border.color: "#c9a84c"

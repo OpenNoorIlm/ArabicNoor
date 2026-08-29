@@ -46,6 +46,7 @@ qt_add_qml_module(appNoorArabic
         LicenseTextPage.qml
     RESOURCES
         LICENSE
+        data/quran.json
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

@@ -11,15 +11,35 @@ Rectangle {
 
     property int selectedSurah: 1
     property string selectedSurahName: "Al-Fatiha"
-    property string selectedTranslation: "Uthmani"
+    property string selectedTranslation: "Kanzul Iman"
     property bool showArabic: true
-    property bool showTranslation: false
+    property bool showTranslation: true
     property bool showTafsir: false
     property bool showTranslit: false
     property bool surahPickerOpen: false
-    property var verses: quranBackend.verses
+    property var backend: typeof quranBackend !== "undefined" && quranBackend !== null ? quranBackend : null
+    readonly property var fallbackVerses: [
+        { num: 1, arabic: "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِينَ", kanzul: "Kanzul Iman preview text loads from bundled data in the app.", irfan: "Kanzul Irfan is not present in bundled quran.json.", jalayn: "Tafsir Jalalayn preview text loads from bundled data in the app.", source: "Preview fallback" },
+        { num: 2, arabic: "ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" },
+        { num: 3, arabic: "مَـٰلِكِ يَوۡمِ ٱلدِّينِ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" },
+        { num: 4, arabic: "إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" },
+        { num: 5, arabic: "ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" },
+        { num: 6, arabic: "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" }
+    ]
+    property var verses: backend !== null && backend.verses.length > 0 ? backend.verses : fallbackVerses
 
-    Component.onCompleted: quranBackend.loadSurah(selectedSurah)
+    Component.onCompleted: {
+        console.log("QuranPage backend available:", backend !== null)
+        if (backend !== null)
+            backend.loadSurah(selectedSurah)
+    }
+
+    Connections {
+        target: quranRoot.backend
+        function onVersesChanged() {
+            console.log("QuranPage received verses:", quranRoot.backend.verses.length)
+        }
+    }
 
     readonly property var surahNames: [
         "Al-Fatiha","Al-Baqarah","Aali Imran","An-Nisa","Al-Maidah","Al-Anam","Al-Araf","Al-Anfal",
@@ -116,14 +136,14 @@ Rectangle {
             MouseArea { id: surahBtnMouse; anchors.fill: parent; onClicked: quranRoot.surahPickerOpen = !quranRoot.surahPickerOpen }
         }
 
-            // Quran text edition pills
-            Row {
+        // Quran text edition pills
+        Row {
             anchors.right: parent.right; anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             spacing: 6
 
             Repeater {
-                model: ["Uthmani"]
+                model: ["Kanzul Iman", "Kanzul Irfan", "Uthmani"]
                 delegate: Rectangle {
                     width: tLbl.implicitWidth + 14; height: 28; radius: 6
                     color: quranRoot.selectedTranslation === modelData ? "#c9a84c" : "#1e3a6e"
@@ -160,8 +180,8 @@ Rectangle {
             Repeater {
                 model: [
                     { label: "ع Arabic", prop: "showArabic" },
-                    { label: "SRC Source", prop: "showTranslation" },
-                    { label: "TF Tafsir", prop: "showTafsir" },
+                    { label: "TR Translation", prop: "showTranslation" },
+                    { label: "TF Jalalayn", prop: "showTafsir" },
                     { label: "EN Translit", prop: "showTranslit" }
                 ]
                 delegate: Rectangle {
@@ -254,7 +274,9 @@ Rectangle {
                                 quranRoot.selectedSurah = index + 1
                                 quranRoot.selectedSurahName = modelData
                                 quranRoot.surahPickerOpen = false
-                                quranBackend.loadSurah(quranRoot.selectedSurah)
+                                console.log("QuranPage requested surah:", quranRoot.selectedSurah, "backend:", quranRoot.backend !== null)
+                                if (quranRoot.backend !== null)
+                                    quranRoot.backend.loadSurah(quranRoot.selectedSurah)
                             }
                         }
                     }
@@ -273,11 +295,24 @@ Rectangle {
             width: quranRoot.width
             spacing: 12
 
+            Label {
+                width: quranRoot.width - 32
+                anchors.horizontalCenter: parent.horizontalCenter
+                visible: quranRoot.backend === null || quranRoot.backend.loading || quranRoot.backend.error !== ""
+                text: quranRoot.backend === null ? "C++ backend is not available in this preview." :
+                      quranRoot.backend.loading ? "Loading Quran from Al Quran Cloud..." :
+                      "Quran backend error: " + quranRoot.backend.error
+                color: quranRoot.backend !== null && quranRoot.backend.error !== "" ? "#ff9a9a" : "#c9a84c"
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+            }
+
             // Bismillah
             Rectangle {
                 width: quranRoot.width
                 height: 70; color: "transparent"
-                visible: quranRoot.selectedSurah !== 9
+                visible: quranRoot.selectedSurah !== 1 && quranRoot.selectedSurah !== 9
 
                 Label {
                     anchors.centerIn: parent
@@ -307,7 +342,6 @@ Rectangle {
                         PauseAnimation { duration: index * 80 }
                         ParallelAnimation {
                             NumberAnimation { target: verseCard; property: "opacity"; from: 0; to: 1; duration: 400; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: verseCard; property: "y"; from: verseCard.y + 20; to: verseCard.y; duration: 400; easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -333,26 +367,28 @@ Rectangle {
                         Label {
                             visible: quranRoot.showTranslit
                             width: parent.width - 32
-                            text: modelData.translit; color: "#8a9abf"
+                            text: modelData.translit || ""; color: "#8a9abf"
                             font.pixelSize: 13; font.italic: true; wrapMode: Text.WordWrap
                         }
 
                         Label {
                             visible: quranRoot.showTranslation
                             width: parent.width - 32
-                            text: "Source: " + modelData.source + " / " + quranRoot.selectedTranslation
+                            text: quranRoot.selectedTranslation === "Kanzul Iman" ? (modelData.kanzul || "Kanzul Iman is not present for this verse.") :
+                                  quranRoot.selectedTranslation === "Kanzul Irfan" ? (modelData.irfan || "Kanzul Irfan is not present in bundled quran.json.") :
+                                  "Source: " + modelData.source + " / Uthmani"
                             color: "#c9a84c"; font.pixelSize: 15; wrapMode: Text.WordWrap
-                            horizontalAlignment: Text.AlignLeft
+                            horizontalAlignment: quranRoot.selectedTranslation === "Uthmani" ? Text.AlignLeft : Text.AlignRight
                         }
 
                         Rectangle {
                             visible: quranRoot.showTafsir
                             width: parent.width - 32
-                            height: tfLbl.implicitHeight + 16
+                            height: Math.max(44, tfLbl.implicitHeight + 16)
                             color: "#0a1428"; radius: 6; border.color: "#2a3a5a"; border.width: 1
                             Label {
                                 id: tfLbl; anchors.fill: parent; anchors.margins: 8
-                                text: "Tafsir is not bundled yet. Quran text is loaded from Al Quran Cloud."
+                                text: modelData.jalayn || "Tafsir Jalalayn is not present for this verse."
                                 color: "#7a8aaa"; font.pixelSize: 13; wrapMode: Text.WordWrap
                             }
                         }

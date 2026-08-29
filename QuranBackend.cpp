@@ -1,9 +1,9 @@
 #include "QuranBackend.h"
 
-#include <QNetworkReply>
-#include <QJsonDocument>
+#include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QDebug>
 
 QuranBackend::QuranBackend(QObject *parent)
     : QObject(parent)
@@ -12,6 +12,8 @@ QuranBackend::QuranBackend(QObject *parent)
 
 void QuranBackend::loadSurah(int number)
 {
+    qDebug() << "QuranBackend::loadSurah called with surah" << number;
+
     if (number < 1 || number > 114) {
         setError(tr("Surah number must be between 1 and 114."));
         return;
@@ -22,48 +24,95 @@ void QuranBackend::loadSurah(int number)
     m_verses.clear();
     emit versesChanged();
 
-    const QUrl url(QStringLiteral("https://api.alquran.cloud/v1/surah/%1/quran-uthmani").arg(number));
-    auto *reply = m_network.get(QNetworkRequest(url));
-
-    connect(reply, &QNetworkReply::finished, this, [this, reply] {
-        const QByteArray body = reply->readAll();
-        const QNetworkReply::NetworkError networkError = reply->error();
-        const QString networkErrorText = reply->errorString();
-        reply->deleteLater();
-
-        if (networkError != QNetworkReply::NoError) {
-            setLoading(false);
-            setError(networkErrorText);
-            return;
-        }
-
-        QJsonParseError parseError;
-        const QJsonDocument document = QJsonDocument::fromJson(body, &parseError);
-        if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
-            setLoading(false);
-            setError(tr("Could not read Quran API response."));
-            return;
-        }
-
-        const QJsonObject root = document.object();
-        const QJsonObject data = root.value(QStringLiteral("data")).toObject();
-        const QJsonArray ayahs = data.value(QStringLiteral("ayahs")).toArray();
-
-        QVariantList nextVerses;
-        nextVerses.reserve(ayahs.size());
-        for (const QJsonValue &ayahValue : ayahs) {
-            const QJsonObject ayah = ayahValue.toObject();
-            QVariantMap verse;
-            verse.insert(QStringLiteral("num"), ayah.value(QStringLiteral("numberInSurah")).toInt());
-            verse.insert(QStringLiteral("arabic"), ayah.value(QStringLiteral("text")).toString());
-            verse.insert(QStringLiteral("source"), QStringLiteral("Al Quran Cloud"));
-            nextVerses.append(verse);
-        }
-
-        m_verses = nextVerses;
-        emit versesChanged();
+    if (!loadData()) {
         setLoading(false);
-    });
+        return;
+    }
+
+    mergeEdition(QStringLiteral("Quran Uthmani (Arabic Text)"), number, QStringLiteral("arabic"));
+    mergeEdition(QStringLiteral("Kanzul Iman (Urdu Translation)"), number, QStringLiteral("kanzul"));
+    mergeEdition(QStringLiteral("Tafsir al-Jalalayn (Arabic Tafsir)"), number, QStringLiteral("jalayn"));
+
+    for (QVariant &verseValue : m_verses) {
+        QVariantMap verse = verseValue.toMap();
+        verse.insert(QStringLiteral("irfan"), tr("Kanzul Irfan is not present in bundled quran.json."));
+        verseValue = verse;
+    }
+
+    if (m_verses.isEmpty())
+        setError(tr("No verses found for this surah in bundled quran.json."));
+
+    setLoading(false);
+    emit versesChanged();
+    qDebug() << "QuranBackend loaded local verses:" << m_verses.size();
+}
+
+bool QuranBackend::loadData()
+{
+    if (m_dataLoaded)
+        return true;
+
+    QFile file(QStringLiteral(":/qt/qml/NoorArabic/data/quran.json"));
+    if (!file.open(QIODevice::ReadOnly)) {
+        file.setFileName(QStringLiteral(":/data/quran.json"));
+        if (!file.open(QIODevice::ReadOnly)) {
+            setError(tr("Could not open bundled quran.json."));
+            qWarning() << "QuranBackend could not open quran.json";
+            return false;
+        }
+    }
+
+    QJsonParseError parseError;
+    m_document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError || !m_document.isObject()) {
+        setError(tr("Could not parse bundled quran.json."));
+        qWarning() << "QuranBackend JSON parse failed:" << parseError.errorString();
+        return false;
+    }
+
+    m_dataLoaded = true;
+    qDebug() << "QuranBackend loaded bundled quran.json";
+    return true;
+}
+
+QJsonArray QuranBackend::ayahsForEdition(const QString &editionName, int surahNumber) const
+{
+    const QJsonObject edition = m_document.object().value(editionName).toObject();
+    const QJsonArray surahs = edition.value(QStringLiteral("data")).toObject().value(QStringLiteral("surahs")).toArray();
+
+    for (const QJsonValue &surahValue : surahs) {
+        const QJsonObject surah = surahValue.toObject();
+        if (surah.value(QStringLiteral("number")).toInt() == surahNumber)
+            return surah.value(QStringLiteral("ayahs")).toArray();
+    }
+
+    return {};
+}
+
+void QuranBackend::mergeEdition(const QString &editionName, int surahNumber, const QString &fieldName)
+{
+    const QJsonArray ayahs = ayahsForEdition(editionName, surahNumber);
+    if (ayahs.isEmpty()) {
+        qWarning() << "QuranBackend missing edition/surah:" << editionName << surahNumber;
+        return;
+    }
+
+    if (m_verses.isEmpty())
+        m_verses.resize(ayahs.size());
+
+    for (const QJsonValue &ayahValue : ayahs) {
+        const QJsonObject ayah = ayahValue.toObject();
+        const int index = ayah.value(QStringLiteral("numberInSurah")).toInt() - 1;
+        if (index < 0 || index >= m_verses.size())
+            continue;
+
+        QVariantMap verse = m_verses.at(index).toMap();
+        verse.insert(QStringLiteral("num"), index + 1);
+        verse.insert(QStringLiteral("source"), QStringLiteral("Bundled quran.json"));
+        verse.insert(fieldName, ayah.value(QStringLiteral("text")).toString());
+        verse.insert(QStringLiteral("translit"), verse.value(QStringLiteral("translit")).toString());
+        m_verses[index] = verse;
+    }
 }
 
 void QuranBackend::setLoading(bool loading)

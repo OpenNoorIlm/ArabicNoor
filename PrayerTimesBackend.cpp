@@ -1,13 +1,47 @@
 #include "PrayerTimesBackend.h"
 
 #include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QUrlQuery>
 
 #include <QDate>
+#include <QDebug>
+#include <QHash>
 #include <QJsonArray>
 #include <QTime>
+#include <QtMath>
+
+namespace {
+
+QString formatCoordinate(double value, const QString &positiveSuffix, const QString &negativeSuffix)
+{
+    const QString suffix = value >= 0 ? positiveSuffix : negativeSuffix;
+    return QStringLiteral("%1 %2").arg(qAbs(value), 0, 'f', 4).arg(suffix);
+}
+
+QString calculateQiblaDirection(double latitude, double longitude)
+{
+    static constexpr double kaabaLatitude = 21.422487;
+    static constexpr double kaabaLongitude = 39.826206;
+
+    const double latitudeRadians = qDegreesToRadians(latitude);
+    const double kaabaLatitudeRadians = qDegreesToRadians(kaabaLatitude);
+    const double longitudeDifferenceRadians = qDegreesToRadians(kaabaLongitude - longitude);
+
+    const double y = qSin(longitudeDifferenceRadians);
+    const double x = qCos(latitudeRadians) * qTan(kaabaLatitudeRadians)
+                     - qSin(latitudeRadians) * qCos(longitudeDifferenceRadians);
+
+    double direction = qRadiansToDegrees(qAtan2(y, x));
+    if (direction < 0)
+        direction += 360.0;
+
+    return QStringLiteral("%1°").arg(direction, 0, 'f', 0);
+}
+
+} // namespace
 
 PrayerTimesBackend::PrayerTimesBackend(QObject *parent)
     : QObject(parent)
@@ -16,7 +50,10 @@ PrayerTimesBackend::PrayerTimesBackend(QObject *parent)
 
 void PrayerTimesBackend::loadCity(const QString &city, const QString &country)
 {
-    QUrl url(QStringLiteral("https://api.aladhan.com/v1/timingsByCity"));
+    qDebug() << "PrayerTimesBackend::loadCity called with" << city << country;
+
+    const QString datePath = QDate::currentDate().toString(QStringLiteral("dd-MM-yyyy"));
+    QUrl url(QStringLiteral("https://api.aladhan.com/v1/timingsByCity/%1").arg(datePath));
     QUrlQuery query;
     query.addQueryItem(QStringLiteral("city"), city.trimmed());
     query.addQueryItem(QStringLiteral("country"), country.trimmed());
@@ -33,7 +70,10 @@ void PrayerTimesBackend::loadAddress(const QString &address)
     if (trimmedAddress.isEmpty())
         return;
 
-    QUrl url(QStringLiteral("https://api.aladhan.com/v1/timingsByAddress"));
+    qDebug() << "PrayerTimesBackend::loadAddress called with" << trimmedAddress;
+
+    const QString datePath = QDate::currentDate().toString(QStringLiteral("dd-MM-yyyy"));
+    QUrl url(QStringLiteral("https://api.aladhan.com/v1/timingsByAddress/%1").arg(datePath));
     QUrlQuery query;
     query.addQueryItem(QStringLiteral("address"), trimmedAddress);
     query.addQueryItem(QStringLiteral("method"), QStringLiteral("1"));
@@ -45,10 +85,16 @@ void PrayerTimesBackend::loadAddress(const QString &address)
 
 void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
 {
+    qDebug() << "PrayerTimesBackend fetching" << url;
+
     setError(QString());
     setLoading(true);
 
-    auto *reply = m_network.get(QNetworkRequest(url));
+    QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+    request.setTransferTimeout(15000);
+
+    auto *reply = m_network.get(request);
     connect(reply, &QNetworkReply::finished, this, [this, reply, displayLocation] {
         const QByteArray body = reply->readAll();
         const QNetworkReply::NetworkError networkError = reply->error();
@@ -58,6 +104,7 @@ void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
         if (networkError != QNetworkReply::NoError) {
             setLoading(false);
             setError(networkErrorText);
+            qWarning() << "PrayerTimesBackend request failed:" << networkErrorText;
             return;
         }
 
@@ -66,12 +113,28 @@ void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
         if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
             setLoading(false);
             setError(tr("Could not read prayer-time API response."));
+            qWarning() << "PrayerTimesBackend JSON parse failed:" << parseError.errorString();
             return;
         }
 
-        const QJsonObject data = document.object().value(QStringLiteral("data")).toObject();
+        const QJsonObject root = document.object();
+        if (root.value(QStringLiteral("code")).toInt() != 200) {
+            setLoading(false);
+            setError(root.value(QStringLiteral("status")).toString(tr("Prayer-time API request failed.")));
+            qWarning() << "PrayerTimesBackend API status failed:" << root.value(QStringLiteral("status")).toString();
+            return;
+        }
+
+        const QJsonObject data = root.value(QStringLiteral("data")).toObject();
         const QJsonObject timings = data.value(QStringLiteral("timings")).toObject();
         const QJsonObject date = data.value(QStringLiteral("date")).toObject();
+        const QJsonObject meta = data.value(QStringLiteral("meta")).toObject();
+        if (timings.isEmpty()) {
+            setLoading(false);
+            setError(tr("Prayer-time API returned no timings."));
+            qWarning() << "PrayerTimesBackend API returned no timings";
+            return;
+        }
 
         const QList<QPair<QString, QString>> names{
             {QStringLiteral("Fajr"), QStringLiteral("الفجر")},
@@ -120,7 +183,12 @@ void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
                      + QStringLiteral(" ")
                      + hijri.value(QStringLiteral("year")).toString()
                      + QStringLiteral(" AH"));
+
+        setCoordinates(meta.value(QStringLiteral("latitude")).toDouble(),
+                       meta.value(QStringLiteral("longitude")).toDouble());
         setLoading(false);
+        qDebug() << "PrayerTimesBackend loaded prayers:" << m_prayers.size();
+        qDebug() << "PrayerTimesBackend coordinates:" << m_latitude << m_longitude << "qibla" << m_qiblaDirection;
     });
 }
 
@@ -149,6 +217,21 @@ void PrayerTimesBackend::setGregorianDate(const QString &gregorianDate)
 
     m_gregorianDate = gregorianDate;
     emit gregorianDateChanged();
+}
+
+void PrayerTimesBackend::setCoordinates(double latitude, double longitude)
+{
+    const QString nextLatitude = formatCoordinate(latitude, QStringLiteral("N"), QStringLiteral("S"));
+    const QString nextLongitude = formatCoordinate(longitude, QStringLiteral("E"), QStringLiteral("W"));
+    const QString nextQiblaDirection = calculateQiblaDirection(latitude, longitude);
+
+    if (m_latitude == nextLatitude && m_longitude == nextLongitude && m_qiblaDirection == nextQiblaDirection)
+        return;
+
+    m_latitude = nextLatitude;
+    m_longitude = nextLongitude;
+    m_qiblaDirection = nextQiblaDirection;
+    emit coordinatesChanged();
 }
 
 void PrayerTimesBackend::setError(const QString &error)

@@ -13,9 +13,9 @@ Rectangle {
     property bool locationSearchMode: false
     property string searchQuery: ""
     property int nextPrayerIndex: 4
-    property var nextPrayer: firstUpcomingPrayer()
+    property var backend: typeof prayerTimesBackend !== "undefined" && prayerTimesBackend !== null ? prayerTimesBackend : null
 
-    property var prayers: prayerTimesBackend.prayers.length > 0 ? prayerTimesBackend.prayers : [
+    readonly property var fallbackPrayers: [
         { name: "Fajr",    arabic: "الفجر",  time: "5:12 AM",  icon: "🌙", done: true  },
         { name: "Sunrise", arabic: "الشروق", time: "6:28 AM",  icon: "🌅", done: true  },
         { name: "Dhuhr",   arabic: "الظهر",  time: "12:38 PM", icon: "☀️", done: true  },
@@ -23,8 +23,14 @@ Rectangle {
         { name: "Maghrib", arabic: "المغرب", time: "6:42 PM",  icon: "🌇", done: false },
         { name: "Isha",    arabic: "العشاء", time: "8:04 PM",  icon: "🌃", done: false }
     ]
+    property var prayers: backend !== null && backend.prayers.length > 0 ? backend.prayers : fallbackPrayers
+    property var nextPrayer: firstUpcomingPrayer()
 
-    Component.onCompleted: prayerTimesBackend.loadCity("Mysuru", "India")
+    Component.onCompleted: {
+        console.log("PrayerTimesPage backend available:", backend !== null)
+        if (backend !== null)
+            backend.loadCity("Mysuru", "India")
+    }
 
     function loadPrayerLocation(value) {
         var query = value.trim()
@@ -34,7 +40,9 @@ Rectangle {
         prayerRoot.locationText = query
         prayerRoot.locationSearchMode = false
         prayerRoot.searchQuery = ""
-        prayerTimesBackend.loadAddress(query)
+        console.log("PrayerTimesPage requested location:", query, "backend:", backend !== null)
+        if (backend !== null)
+            backend.loadAddress(query)
     }
 
     function firstUpcomingPrayer() {
@@ -62,9 +70,12 @@ Rectangle {
     }
 
     Connections {
-        target: prayerTimesBackend
-        function onLocationChanged() { prayerRoot.locationText = prayerTimesBackend.location }
-        function onPrayersChanged() { prayerRoot.nextPrayer = prayerRoot.firstUpcomingPrayer() }
+        target: prayerRoot.backend
+        function onLocationChanged() { prayerRoot.locationText = prayerRoot.backend.location }
+        function onPrayersChanged() {
+            console.log("PrayerTimesPage received prayers:", prayerRoot.backend.prayers.length)
+            prayerRoot.nextPrayer = prayerRoot.firstUpcomingPrayer()
+        }
     }
 
     // ── Heading ───────────────────────────────────────────────────────────
@@ -235,9 +246,9 @@ Rectangle {
 
                 Row {
                     anchors.centerIn: parent; spacing: 16
-                    Label { text: prayerTimesBackend.gregorianDate !== "" ? prayerTimesBackend.gregorianDate : "Loading date"; color: "#7a8aaa"; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: prayerRoot.backend === null ? "C++ backend unavailable" : prayerRoot.backend.error !== "" ? prayerRoot.backend.error : prayerRoot.backend.gregorianDate !== "" ? prayerRoot.backend.gregorianDate : "Loading date"; color: prayerRoot.backend !== null && prayerRoot.backend.error !== "" ? "#ff9a9a" : "#7a8aaa"; font.pixelSize: 13; anchors.verticalCenter: parent.verticalCenter }
                     Rectangle { width: 1; height: 14; color: "#c9a84c"; opacity: 0.4; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: prayerTimesBackend.hijriDate !== "" ? prayerTimesBackend.hijriDate : "Loading Hijri date"; color: "#c9a84c"; font.pixelSize: 13; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: prayerRoot.backend !== null && prayerRoot.backend.hijriDate !== "" ? prayerRoot.backend.hijriDate : "Loading Hijri date"; color: "#c9a84c"; font.pixelSize: 13; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
 
@@ -383,7 +394,7 @@ Rectangle {
                 }
             }
 
-            // ── Location visual card (Islamic geometric) ──────────────────
+            // ── Location and Qibla card ───────────────────────────────────
             Rectangle {
                 width: prayerRoot.width - 32
                 anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
@@ -395,7 +406,6 @@ Rectangle {
                 Component.onCompleted: { opacity = 1 }
                 Behavior on opacity { NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
 
-                // Islamic geometric background pattern (animated)
                 Canvas {
                     id: geoCanvas
                     anchors.fill: parent
@@ -435,7 +445,6 @@ Rectangle {
                     }
                 }
 
-                // Glowing center pin
                 Column {
                     anchors.centerIn: parent; spacing: 4
 
@@ -457,7 +466,7 @@ Rectangle {
                             NumberAnimation { from: 4; to: 2; duration: 1200; easing.type: Easing.InOutSine }
                         }
 
-                        Label { text: "📍"; font.pixelSize: 28; anchors.centerIn: parent }
+                        Label { text: "🧭"; font.pixelSize: 28; anchors.centerIn: parent }
                     }
 
                     Label {
@@ -467,13 +476,14 @@ Rectangle {
                     }
 
                     Label {
-                        text: "Lat: 12.2958° N  •  Lon: 76.6394° E"
+                        text: prayerRoot.backend !== null && prayerRoot.backend.latitude !== "" ?
+                              "Lat: " + prayerRoot.backend.latitude + "  •  Lon: " + prayerRoot.backend.longitude :
+                              "Lat/Lon loading from prayer backend"
                         color: "#7a8aaa"; font.pixelSize: 12
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
                 }
 
-                // Compass rose
                 Label {
                     anchors.right: parent.right; anchors.rightMargin: 14
                     anchors.top: parent.top; anchors.topMargin: 14
@@ -488,7 +498,6 @@ Rectangle {
                     }
                 }
 
-                // Qibla direction indicator
                 Rectangle {
                     anchors.left: parent.left; anchors.leftMargin: 14
                     anchors.bottom: parent.bottom; anchors.bottomMargin: 14
@@ -499,14 +508,17 @@ Rectangle {
                         id: qiblaRow
                         anchors.centerIn: parent; spacing: 6
                         Label { text: "🕋"; font.pixelSize: 14; anchors.verticalCenter: parent.verticalCenter }
-                        Label { text: "Qibla: 292°"; color: "#c9a84c"; font.pixelSize: 12; font.bold: true; anchors.verticalCenter: parent.verticalCenter }
+                        Label {
+                            text: "Qibla: " + (prayerRoot.backend !== null && prayerRoot.backend.qiblaDirection !== "" ? prayerRoot.backend.qiblaDirection : "loading")
+                            color: "#c9a84c"; font.pixelSize: 12; font.bold: true; anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
                 }
 
                 Label {
                     anchors.right: parent.right; anchors.rightMargin: 14
                     anchors.bottom: parent.bottom; anchors.bottomMargin: 14
-                    text: "Full map via C++ backend"
+                    text: prayerRoot.backend !== null && prayerRoot.backend.latitude !== "" ? "Location data from C++ backend" : "Waiting for C++ backend"
                     color: "#3a4a6a"; font.pixelSize: 10; font.italic: true
                 }
             }

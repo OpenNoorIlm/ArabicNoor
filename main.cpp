@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QFile>
+#include <QDebug>
 #include <QQmlContext>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
@@ -16,6 +17,7 @@ int main(int argc, char *argv[])
     PrayerTimesBackend prayerTimesBackend;
     engine.rootContext()->setContextProperty("quranBackend", &quranBackend);
     engine.rootContext()->setContextProperty("prayerTimesBackend", &prayerTimesBackend);
+    qDebug() << "NoorArabic C++ backends registered";
 #if !defined(Q_OS_ANDROID)
     engine.addImportPath(QStringLiteral(QDS_QML_IMPORT_PATH));
     engine.addImportPath(QStringLiteral(QT_QML_IMPORT_PATH));
