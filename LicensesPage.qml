@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Timeline 1.0
-import QtQuick.Studio.DesignEffects
 
 Rectangle {
     id: licensesRoot
@@ -16,7 +15,6 @@ Rectangle {
         font.pixelSize: 28
         font.bold: true
         z: 2
-        DesignEffect { effects: [ DesignDropShadow { color: "#80c9a84c" } ] }
     }
 
     Timeline {

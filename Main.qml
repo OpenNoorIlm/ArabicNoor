@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 2.15
-import QtQuick.Studio.DesignEffects
-import QtQuick.Studio.Components
 import QtQuick.Timeline 1.0
 
 ApplicationWindow {
@@ -66,13 +64,6 @@ ApplicationWindow {
                 duration: 150
                 easing.type: Easing.OutBack
             }
-        }
-
-        DesignEffect {
-            effects: [
-                DesignDropShadow {
-                }
-            ]
         }
     }
 

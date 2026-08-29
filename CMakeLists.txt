@@ -74,11 +74,23 @@ if(ANDROID)
     )
 endif()
 
+if(EMSCRIPTEN)
+    target_compile_definitions(appNoorArabic PRIVATE
+        NOORARABIC_WASM=1
+    )
+
+    target_link_options(appNoorArabic PRIVATE
+        "SHELL:-s FETCH=1"
+        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+        "SHELL:-s MAXIMUM_MEMORY=1GB"
+    )
+endif()
+
 target_link_libraries(appNoorArabic
     PRIVATE Qt6::Core Qt6::Quick Qt6::QuickControls2 Qt6::Network
 )
 
-if(NOT ANDROID)
+if(NOT ANDROID AND NOT EMSCRIPTEN)
     set(QDS_QML_PATH "/home/bismillah/Qt/Tools/QtDesignStudio-4.8.3-preview/qt6_design_studio_reduced_version/qml")
     set(QT_QML_PATH "/home/bismillah/Qt/6.11.2/gcc_64/qml")
 

@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Timeline 1.0
-import QtQuick.Studio.DesignEffects
-import QtQuick.Studio.Components
 
 Rectangle {
     id: nahwPage
@@ -16,10 +14,6 @@ Rectangle {
         color: "#c9a84c"
         font.pixelSize: 28
         font.bold: true
-
-        DesignEffect {
-            effects: [ DesignDropShadow { } ]
-        }
     }
 
     Timeline {

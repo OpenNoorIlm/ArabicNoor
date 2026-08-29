@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("quranBackend", &quranBackend);
     engine.rootContext()->setContextProperty("prayerTimesBackend", &prayerTimesBackend);
     qDebug() << "NoorArabic C++ backends registered";
-#if !defined(Q_OS_ANDROID)
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_WASM)
     engine.addImportPath(QStringLiteral(QDS_QML_IMPORT_PATH));
     engine.addImportPath(QStringLiteral(QT_QML_IMPORT_PATH));
 #endif

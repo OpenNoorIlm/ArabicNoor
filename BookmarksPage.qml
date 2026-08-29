@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Timeline 1.0
-import QtQuick.Studio.DesignEffects
-import QtQuick.Studio.Components
 
 Rectangle {
     id: rectangle
@@ -19,13 +17,6 @@ Rectangle {
         anchors.verticalCenterOffset: -500
         anchors.horizontalCenterOffset: 0
         font.bold: true
-
-        DesignEffect {
-            effects: [
-                DesignDropShadow {
-                }
-            ]
-        }
     }
 
     Timeline {
@@ -102,13 +93,6 @@ Rectangle {
                 frame: 60
             }
         }
-    }
-
-    DesignEffect {
-        effects: [
-            DesignInnerShadow {
-            }
-        ]
     }
 
 }

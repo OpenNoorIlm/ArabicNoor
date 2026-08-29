@@ -46,6 +46,7 @@ QString calculateQiblaDirection(double latitude, double longitude)
 PrayerTimesBackend::PrayerTimesBackend(QObject *parent)
     : QObject(parent)
 {
+    loadFallback(QStringLiteral("Mysuru, Karnataka, India"));
 }
 
 void PrayerTimesBackend::loadCity(const QString &city, const QString &country)
@@ -88,6 +89,7 @@ void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
     qDebug() << "PrayerTimesBackend fetching" << url;
 
     setError(QString());
+    loadFallback(displayLocation);
     setLoading(true);
 
     QNetworkRequest request(url);
@@ -190,6 +192,54 @@ void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
         qDebug() << "PrayerTimesBackend loaded prayers:" << m_prayers.size();
         qDebug() << "PrayerTimesBackend coordinates:" << m_latitude << m_longitude << "qibla" << m_qiblaDirection;
     });
+}
+
+void PrayerTimesBackend::loadFallback(const QString &displayLocation)
+{
+    const QList<QVariantMap> fallbackRows{
+        {{QStringLiteral("name"), QStringLiteral("Fajr")},
+         {QStringLiteral("arabic"), QStringLiteral("الفجر")},
+         {QStringLiteral("time"), QStringLiteral("05:01")},
+         {QStringLiteral("icon"), QStringLiteral("moon")}},
+        {{QStringLiteral("name"), QStringLiteral("Sunrise")},
+         {QStringLiteral("arabic"), QStringLiteral("الشروق")},
+         {QStringLiteral("time"), QStringLiteral("06:13")},
+         {QStringLiteral("icon"), QStringLiteral("sunrise")}},
+        {{QStringLiteral("name"), QStringLiteral("Dhuhr")},
+         {QStringLiteral("arabic"), QStringLiteral("الظهر")},
+         {QStringLiteral("time"), QStringLiteral("12:25")},
+         {QStringLiteral("icon"), QStringLiteral("sun")}},
+        {{QStringLiteral("name"), QStringLiteral("Asr")},
+         {QStringLiteral("arabic"), QStringLiteral("العصر")},
+         {QStringLiteral("time"), QStringLiteral("16:46")},
+         {QStringLiteral("icon"), QStringLiteral("cloud-sun")}},
+        {{QStringLiteral("name"), QStringLiteral("Maghrib")},
+         {QStringLiteral("arabic"), QStringLiteral("المغرب")},
+         {QStringLiteral("time"), QStringLiteral("18:37")},
+         {QStringLiteral("icon"), QStringLiteral("sunset")}},
+        {{QStringLiteral("name"), QStringLiteral("Isha")},
+         {QStringLiteral("arabic"), QStringLiteral("العشاء")},
+         {QStringLiteral("time"), QStringLiteral("19:48")},
+         {QStringLiteral("icon"), QStringLiteral("night")}}
+    };
+
+    const QTime now = QTime::currentTime();
+    QVariantList fallbackPrayers;
+    fallbackPrayers.reserve(fallbackRows.size());
+
+    for (QVariantMap prayer : fallbackRows) {
+        const QTime prayerTime = QTime::fromString(prayer.value(QStringLiteral("time")).toString(), QStringLiteral("HH:mm"));
+        prayer.insert(QStringLiteral("done"), prayerTime.isValid() && prayerTime < now);
+        fallbackPrayers.append(prayer);
+    }
+
+    m_prayers = fallbackPrayers;
+    emit prayersChanged();
+
+    setLocation(displayLocation);
+    setGregorianDate(QDate::currentDate().toString(QStringLiteral("dd MMM yyyy")));
+    setHijriDate(QStringLiteral("Offline Hijri date unavailable"));
+    setCoordinates(12.2958, 76.6394);
 }
 
 void PrayerTimesBackend::setLocation(const QString &location)

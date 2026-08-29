@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Studio.DesignEffects
-import QtQuick.Studio.Components
 import QtQuick.Timeline 1.0
 
 Rectangle {
@@ -9,29 +7,13 @@ Rectangle {
     height: parent ? parent.height : Screen.height
     color: "#1a1a2e"
 
-    DesignEffect {
-        effects: [
-            DesignDropShadow {
-                color: "#80c9a84c"
-            }
-        ]
-    }
-
-    TextItem {
+    Text {
         id: appNameText
         x: 256
         y: -44
         text: qsTr("NoorArabic")
         font.pixelSize: 31
-        strokeColor: "#8b6914"
-        fillColor: "#c9a84c"
-
-        DesignEffect {
-            effects: [
-                DesignDropShadow {
-                }
-            ]
-        }
+        color: "#c9a84c"
     }
 
     Timeline {

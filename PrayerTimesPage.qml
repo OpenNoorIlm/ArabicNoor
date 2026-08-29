@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Timeline 1.0
-import QtQuick.Studio.DesignEffects
 
 Rectangle {
     id: prayerRoot
@@ -9,7 +8,7 @@ Rectangle {
     height: parent ? parent.height : Screen.height
     color: "#1a1a2e"
 
-    property string locationText: "Mysuru, Karnataka, IN"
+    property string locationText: "Mysuru, Karnataka, India"
     property bool locationSearchMode: false
     property string searchQuery: ""
     property int nextPrayerIndex: 4
@@ -69,6 +68,27 @@ Rectangle {
         return name
     }
 
+    function backendLatitude() {
+        if (backend === null || backend.latitude === "")
+            return 12.2958
+
+        return parseFloat(backend.latitude)
+    }
+
+    function backendLongitude() {
+        if (backend === null || backend.longitude === "")
+            return 76.6394
+
+        return parseFloat(backend.longitude)
+    }
+
+    function backendQiblaAngle() {
+        if (backend === null || backend.qiblaDirection === "")
+            return 290
+
+        return parseFloat(backend.qiblaDirection)
+    }
+
     Connections {
         target: prayerRoot.backend
         function onLocationChanged() { prayerRoot.locationText = prayerRoot.backend.location }
@@ -84,7 +104,6 @@ Rectangle {
         text: "🕌 Prayer Times"
         color: "#c9a84c"
         font.pixelSize: 28; font.bold: true; z: 2
-        DesignEffect { effects: [ DesignDropShadow { color: "#80c9a84c" } ] }
     }
 
     Timeline {
@@ -394,11 +413,11 @@ Rectangle {
                 }
             }
 
-            // ── Location and Qibla card ───────────────────────────────────
+            // ── Offline map and Qibla card ────────────────────────────────
             Rectangle {
                 width: prayerRoot.width - 32
                 anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
-                height: 220; radius: 14
+                height: 260; radius: 14
                 color: "#0d1b36"
                 border.color: "#c9a84c"; border.width: 1
                 clip: true
@@ -407,94 +426,203 @@ Rectangle {
                 Behavior on opacity { NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
 
                 Canvas {
-                    id: geoCanvas
+                    id: mapCanvas
                     anchors.fill: parent
-                    opacity: 0.18
+                    opacity: 1.0
 
                     property real phase: 0
                     onPhaseChanged: requestPaint()
+                    onWidthChanged: requestPaint()
+                    onHeightChanged: requestPaint()
 
                     NumberAnimation on phase {
                         from: 0; to: Math.PI * 2
-                        duration: 8000; loops: Animation.Infinite
+                        duration: 10000; loops: Animation.Infinite
                         running: true
                     }
 
                     onPaint: {
                         var ctx = getContext("2d")
                         ctx.clearRect(0, 0, width, height)
-                        ctx.strokeStyle = "#c9a84c"
-                        ctx.lineWidth = 0.8
 
-                        var step = 40
-                        for (var x = 0; x < width + step; x += step) {
-                            for (var y = 0; y < height + step; y += step) {
-                                var r = step * 0.4 + Math.sin(phase + x * 0.05 + y * 0.03) * 4
-                                ctx.beginPath()
-                                ctx.arc(x, y, r, 0, Math.PI * 2)
-                                ctx.stroke()
-
-                                ctx.beginPath()
-                                ctx.moveTo(x - step * 0.5, y)
-                                ctx.lineTo(x + step * 0.5, y)
-                                ctx.moveTo(x, y - step * 0.5)
-                                ctx.lineTo(x, y + step * 0.5)
-                                ctx.stroke()
+                        function project(lon, lat) {
+                            return {
+                                x: (lon + 180) / 360 * width,
+                                y: (90 - lat) / 180 * height
                             }
                         }
+
+                        function drawLand(points) {
+                            if (points.length === 0)
+                                return
+
+                            var first = project(points[0][0], points[0][1])
+                            ctx.beginPath()
+                            ctx.moveTo(first.x, first.y)
+
+                            for (var i = 1; i < points.length; ++i) {
+                                var p = project(points[i][0], points[i][1])
+                                ctx.lineTo(p.x, p.y)
+                            }
+
+                            ctx.closePath()
+                            ctx.fill()
+                            ctx.stroke()
+                        }
+
+                        var gradient = ctx.createLinearGradient(0, 0, width, height)
+                        gradient.addColorStop(0, "#12325f")
+                        gradient.addColorStop(1, "#06142a")
+                        ctx.fillStyle = gradient
+                        ctx.fillRect(0, 0, width, height)
+
+                        ctx.strokeStyle = "#1f3a66"
+                        ctx.lineWidth = 1
+                        for (var lon = -180; lon <= 180; lon += 30) {
+                            var meridianTop = project(lon, 85)
+                            var meridianBottom = project(lon, -85)
+                            ctx.beginPath()
+                            ctx.moveTo(meridianTop.x, meridianTop.y)
+                            ctx.lineTo(meridianBottom.x, meridianBottom.y)
+                            ctx.stroke()
+                        }
+
+                        for (var lat = -60; lat <= 60; lat += 20) {
+                            var parallelLeft = project(-180, lat)
+                            var parallelRight = project(180, lat)
+                            ctx.beginPath()
+                            ctx.moveTo(parallelLeft.x, parallelLeft.y + Math.sin(phase + lat) * 1.5)
+                            ctx.lineTo(parallelRight.x, parallelRight.y + Math.sin(phase + lat) * 1.5)
+                            ctx.stroke()
+                        }
+
+                        ctx.fillStyle = "#162f42"
+                        ctx.strokeStyle = "#2e5d70"
+                        ctx.lineWidth = 1.2
+
+                        drawLand([[-170, 70], [-135, 72], [-100, 55], [-82, 26], [-102, 8],
+                                  [-118, 16], [-130, 48]])
+                        drawLand([[-82, 12], [-48, 8], [-35, -20], [-55, -55], [-76, -48],
+                                  [-80, -10]])
+                        drawLand([[-20, 35], [25, 38], [50, 20], [43, -35], [18, -35],
+                                  [0, 5]])
+                        drawLand([[-10, 70], [45, 72], [100, 58], [145, 45], [155, 8],
+                                  [105, -10], [78, 8], [45, 20], [28, 36], [-5, 35]])
+                        drawLand([[110, -10], [155, -12], [150, -42], [116, -46],
+                                  [104, -28]])
+                        drawLand([[-52, 72], [-18, 72], [-28, 60], [-48, 60]])
+
+                        var latitude = prayerRoot.backendLatitude()
+                        var longitude = prayerRoot.backendLongitude()
+                        var marker = project(longitude, latitude)
+                        var kaaba = project(39.826206, 21.422487)
+
+                        ctx.strokeStyle = "#c9a84c"
+                        ctx.lineWidth = 2
+                        ctx.setLineDash([7, 7])
+                        ctx.beginPath()
+                        ctx.moveTo(marker.x, marker.y)
+                        ctx.lineTo(kaaba.x, kaaba.y)
+                        ctx.stroke()
+                        ctx.setLineDash([])
+
+                        ctx.fillStyle = "#c9a84c"
+                        ctx.beginPath()
+                        ctx.arc(kaaba.x, kaaba.y, 5, 0, Math.PI * 2)
+                        ctx.fill()
+
+                        ctx.strokeStyle = "#c9a84c"
+                        ctx.fillStyle = "#b65b2d"
+                        ctx.lineWidth = 3
+                        ctx.beginPath()
+                        ctx.arc(marker.x, marker.y, 10 + Math.sin(phase) * 2, 0, Math.PI * 2)
+                        ctx.fill()
+                        ctx.stroke()
+
+                        ctx.fillStyle = "#f8d76b"
+                        ctx.font = "bold 11px sans-serif"
+                        ctx.fillText("You", marker.x + 14, marker.y - 8)
+                        ctx.fillText("Makkah", kaaba.x + 10, kaaba.y - 8)
                     }
                 }
 
-                Column {
-                    anchors.centerIn: parent; spacing: 4
-
-                    Rectangle {
-                        width: 60; height: 60; radius: 30
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        color: "#c9a84c22"
-                        border.color: "#c9a84c"; border.width: 2
-
-                        SequentialAnimation on scale {
-                            running: true; loops: Animation.Infinite
-                            NumberAnimation { from: 1.0; to: 1.15; duration: 1200; easing.type: Easing.InOutSine }
-                            NumberAnimation { from: 1.15; to: 1.0; duration: 1200; easing.type: Easing.InOutSine }
-                        }
-
-                        SequentialAnimation on border.width {
-                            running: true; loops: Animation.Infinite
-                            NumberAnimation { from: 2; to: 4; duration: 1200; easing.type: Easing.InOutSine }
-                            NumberAnimation { from: 4; to: 2; duration: 1200; easing.type: Easing.InOutSine }
-                        }
-
-                        Label { text: "🧭"; font.pixelSize: 28; anchors.centerIn: parent }
-                    }
-
-                    Label {
-                        text: prayerRoot.locationText
-                        color: "#c9a84c"; font.pixelSize: 15; font.bold: true
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-
-                    Label {
-                        text: prayerRoot.backend !== null && prayerRoot.backend.latitude !== "" ?
-                              "Lat: " + prayerRoot.backend.latitude + "  •  Lon: " + prayerRoot.backend.longitude :
-                              "Lat/Lon loading from prayer backend"
-                        color: "#7a8aaa"; font.pixelSize: 12
-                        anchors.horizontalCenter: parent.horizontalCenter
+                Connections {
+                    target: prayerRoot.backend
+                    function onCoordinatesChanged() {
+                        mapCanvas.requestPaint()
                     }
                 }
 
-                Label {
+                Rectangle {
+                    id: compass
                     anchors.right: parent.right; anchors.rightMargin: 14
                     anchors.top: parent.top; anchors.topMargin: 14
-                    text: "N\n⬆"
-                    color: "#c9a84c"; font.pixelSize: 11; font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
+                    width: 56; height: 56; radius: 28
+                    color: "#071326cc"
+                    border.color: "#c9a84c"
+                    border.width: 1
 
-                    SequentialAnimation on opacity {
-                        running: true; loops: Animation.Infinite
-                        NumberAnimation { from: 1.0; to: 0.4; duration: 2000; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: 0.4; to: 1.0; duration: 2000; easing.type: Easing.InOutSine }
+                    Label {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top; anchors.topMargin: 3
+                        text: "N"
+                        color: "#c9a84c"; font.pixelSize: 10; font.bold: true
+                    }
+
+                    Item {
+                        anchors.centerIn: parent
+                        width: 28; height: 28
+                        rotation: prayerRoot.backendQiblaAngle()
+
+                        Rectangle {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            width: 4; height: 18; radius: 2
+                            color: "#c9a84c"
+                        }
+
+                        Label {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top; anchors.topMargin: -8
+                            text: "▲"
+                            color: "#c9a84c"; font.pixelSize: 16
+                        }
+                    }
+                }
+
+                Rectangle {
+                    anchors.left: parent.left; anchors.leftMargin: 16
+                    anchors.top: parent.top; anchors.topMargin: 16
+                    width: Math.min(parent.width - 110, 360)
+                    height: 76; radius: 12
+                    color: "#071326dd"
+                    border.color: "#c9a84c55"; border.width: 1
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 4
+
+                        Label {
+                            text: prayerRoot.locationText
+                            color: "#c9a84c"; font.pixelSize: 15; font.bold: true
+                            width: parent.width
+                            elide: Text.ElideRight
+                        }
+
+                        Label {
+                            text: prayerRoot.backend !== null && prayerRoot.backend.latitude !== "" ?
+                                  "Lat: " + prayerRoot.backend.latitude + "  •  Lon: " + prayerRoot.backend.longitude :
+                                  "Lat/Lon loading from prayer backend"
+                            color: "#9badc8"; font.pixelSize: 12
+                            width: parent.width
+                            elide: Text.ElideRight
+                        }
+
+                        Label {
+                            text: "Offline map • Qibla line to Makkah"
+                            color: "#6d7f9f"; font.pixelSize: 11
+                        }
                     }
                 }
 

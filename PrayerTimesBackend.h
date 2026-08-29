@@ -40,6 +40,7 @@ signals:
     void loadingChanged();
 
 private:
+    void loadFallback(const QString &displayLocation);
     void fetch(const QUrl &url, const QString &displayLocation);
     void setLocation(const QString &location);
     void setHijriDate(const QString &hijriDate);

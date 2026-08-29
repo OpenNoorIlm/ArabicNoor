@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Timeline 1.0
-import QtQuick.Studio.DesignEffects
-import QtQuick.Studio.Components
 
 Rectangle {
     id: rectangle
@@ -19,13 +17,6 @@ Rectangle {
         anchors.verticalCenterOffset: -500
         anchors.horizontalCenterOffset: 0
         font.bold: true
-
-        DesignEffect {
-            effects: [
-                DesignDropShadow {
-                }
-            ]
-        }
     }
 
     Timeline {
@@ -104,13 +95,6 @@ Rectangle {
         }
     }
 
-    DesignEffect {
-        effects: [
-            DesignInnerShadow {
-            }
-        ]
-    }
-
     Button {
         id: sarfBtn
         text: qsTr("Sarf")
@@ -181,10 +165,6 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
             onClicked: sarfBtn.clicked()
-        }
-
-        DesignEffect {
-            effects: [ DesignDropShadow { color: "#80c9a84c" } ]
         }
     }
 
@@ -258,10 +238,6 @@ Rectangle {
             hoverEnabled: true
             onClicked: sarfBtn1.clicked()
         }
-
-        DesignEffect {
-            effects: [ DesignDropShadow { color: "#80c9a84c" } ]
-        }
     }
 
     Button {
@@ -333,10 +309,6 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
             onClicked: sarfBtn2.clicked()
-        }
-
-        DesignEffect {
-            effects: [ DesignDropShadow { color: "#80c9a84c" } ]
         }
     }
 
