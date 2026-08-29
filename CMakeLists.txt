@@ -19,6 +19,8 @@ qt_add_executable(appNoorArabic
     QuranBackend.cpp
     PrayerTimesBackend.h
     PrayerTimesBackend.cpp
+    LessonStoreBackend.h
+    LessonStoreBackend.cpp
 )
 
 qt_add_qml_module(appNoorArabic
@@ -44,6 +46,7 @@ qt_add_qml_module(appNoorArabic
         SettingSectionHeader.qml
         LicensesPage.qml
         LicenseTextPage.qml
+        SubjectLessonStore.qml
     RESOURCES
         LICENSE
         data/quran.json

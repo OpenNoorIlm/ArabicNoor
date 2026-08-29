@@ -6,6 +6,7 @@
 #include <QQuickStyle>
 #include "QuranBackend.h"
 #include "PrayerTimesBackend.h"
+#include "LessonStoreBackend.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,8 +16,10 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     QuranBackend quranBackend;
     PrayerTimesBackend prayerTimesBackend;
+    LessonStoreBackend lessonStoreBackend;
     engine.rootContext()->setContextProperty("quranBackend", &quranBackend);
     engine.rootContext()->setContextProperty("prayerTimesBackend", &prayerTimesBackend);
+    engine.rootContext()->setContextProperty("lessonStoreBackend", &lessonStoreBackend);
     qDebug() << "NoorArabic C++ backends registered";
 #if !defined(Q_OS_ANDROID) && !defined(Q_OS_WASM)
     engine.addImportPath(QStringLiteral(QDS_QML_IMPORT_PATH));
