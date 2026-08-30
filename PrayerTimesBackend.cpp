@@ -46,7 +46,6 @@ QString calculateQiblaDirection(double latitude, double longitude)
 PrayerTimesBackend::PrayerTimesBackend(QObject *parent)
     : QObject(parent)
 {
-    loadFallback(QStringLiteral("Mysuru, Karnataka, India"));
 }
 
 void PrayerTimesBackend::loadCity(const QString &city, const QString &country)

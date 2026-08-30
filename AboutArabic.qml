@@ -26,7 +26,7 @@ Rectangle {
             target: aboutArabicLbl; property: "x"
             Keyframe { value: aboutArabicRoot.width * 0.5 - aboutArabicLbl.width * 0.5; frame: 0 }
             Keyframe { value: aboutArabicRoot.width * 0.5 - aboutArabicLbl.width * 0.5; frame: 60 }
-            Keyframe { value: 883; frame: 70 }
+            Keyframe { value: Math.max(16, aboutArabic.width - headingLbl.width - 24); frame: 70 }
         }
         KeyframeGroup {
             target: aboutArabicLbl; property: "y"

@@ -1,0 +1,20 @@
+<RCC>
+    <qresource>
+        <file>Lesson.qmlproject</file>
+        <file>Lesson/Constants.qml</file>
+        <file>Lesson/EventListModel.qml</file>
+        <file>Lesson/EventListSimulator.qml</file>
+        <file>Lesson/qmldir</file>
+        <file>LessonContent/App.qml</file>
+        <file>LessonContent/Screen01.ui.qml</file>
+        <file>LessonContent/blurred_sphere.png</file>
+        <file>LessonContent/color_table.png</file>
+        <file>LessonContent/color_table2.png</file>
+        <file>LessonContent/rain.png</file>
+        <file>LessonContent/ripple.png</file>
+        <file>LessonContent/smoke_sprite.png</file>
+        <file>LessonContent/smoke_sprite2.png</file>
+        <file>LessonContent/splash7.png</file>
+        <file>qtquickcontrols2.conf</file>
+    </qresource>
+</RCC>

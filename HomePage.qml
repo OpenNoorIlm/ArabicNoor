@@ -9,7 +9,7 @@ Rectangle {
 
     Text {
         id: appNameText
-        x: 256
+        x: homePage.width * 0.5 - width * 0.5
         y: -44
         text: qsTr("NoorArabic")
         font.pixelSize: 31
@@ -45,7 +45,7 @@ Rectangle {
                 frame: 60
             }
             Keyframe {
-                value: 883
+                value: Math.max(16, homePage.width - appNameText.width - 24)
                 frame: 70
             }
         }

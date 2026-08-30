@@ -32,7 +32,7 @@ Rectangle {
             target: settingLbl; property: "x"
             Keyframe { value: settingsRoot.width * 0.5 - settingLbl.width * 0.5; frame: 0 }
             Keyframe { value: settingsRoot.width * 0.5 - settingLbl.width * 0.5; frame: 60 }
-            Keyframe { value: 883; frame: 70 }
+            Keyframe { value: Math.max(16, settingsRoot.width - settingsLbl.width - 24); frame: 70 }
         }
         KeyframeGroup {
             target: settingLbl; property: "y"

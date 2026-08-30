@@ -1,8 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QVariantList>
-#include <QMap>
-#include <QJsonDocument>
+#include <QString>
 
 class QuranBackend : public QObject {
     Q_OBJECT
@@ -26,15 +25,14 @@ signals:
     void errorChanged();
 
 private:
-    bool loadData();
-    QJsonArray ayahsForEdition(const QString &editionName, int surahNumber) const;
-    void mergeEdition(const QString &editionName, int surahNumber, const QString &fieldName);
+    bool ensureDatabase();
+    QString databasePath();
     void setLoading(bool loading);
     void setError(const QString &error);
 
-    QJsonDocument m_document;
     QVariantList m_verses;
-    bool m_dataLoaded = false;
+    QString m_connectionName;
+    int m_loadedSurah = 0;
     bool m_loading = false;
     QString m_error;
 };

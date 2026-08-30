@@ -26,7 +26,7 @@ Rectangle {
             target: aboutNahwLbl; property: "x"
             Keyframe { value: aboutNahwRoot.width * 0.5 - aboutNahwLbl.width * 0.5; frame: 0 }
             Keyframe { value: aboutNahwRoot.width * 0.5 - aboutNahwLbl.width * 0.5; frame: 60 }
-            Keyframe { value: 883; frame: 70 }
+            Keyframe { value: Math.max(16, aboutNahw.width - headingLbl.width - 24); frame: 70 }
         }
         KeyframeGroup {
             target: aboutNahwLbl; property: "y"

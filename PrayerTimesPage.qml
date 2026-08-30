@@ -27,8 +27,13 @@ Rectangle {
 
     Component.onCompleted: {
         console.log("PrayerTimesPage backend available:", backend !== null)
-        if (backend !== null)
-            backend.loadCity("Mysuru", "India")
+    }
+
+    Timer {
+        interval: 1
+        running: prayerRoot.backend !== null
+        repeat: false
+        onTriggered: prayerRoot.backend.loadCity("Mysuru", "India")
     }
 
     function loadPrayerLocation(value) {
@@ -114,7 +119,7 @@ Rectangle {
             target: prayerLbl; property: "x"
             Keyframe { value: prayerRoot.width * 0.5 - prayerLbl.width * 0.5; frame: 0 }
             Keyframe { value: prayerRoot.width * 0.5 - prayerLbl.width * 0.5; frame: 60 }
-            Keyframe { value: 883; frame: 70 }
+            Keyframe { value: Math.max(16, prayerRoot.width - prayerLbl.width - 24); frame: 70 }
         }
         KeyframeGroup {
             target: prayerLbl; property: "y"

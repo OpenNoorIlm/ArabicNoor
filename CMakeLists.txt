@@ -4,7 +4,7 @@ project(NoorArabic VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 Network Sql)
 
 qt_standard_project_setup(REQUIRES 6.10)
 
@@ -49,7 +49,7 @@ qt_add_qml_module(appNoorArabic
         SubjectLessonStore.qml
     RESOURCES
         LICENSE
-        data/quran.json
+        data/quran.db
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -90,7 +90,7 @@ if(EMSCRIPTEN)
 endif()
 
 target_link_libraries(appNoorArabic
-    PRIVATE Qt6::Core Qt6::Quick Qt6::QuickControls2 Qt6::Network
+    PRIVATE Qt6::Core Qt6::Quick Qt6::QuickControls2 Qt6::Network Qt6::Sql
 )
 
 if(NOT ANDROID AND NOT EMSCRIPTEN)

@@ -18,7 +18,7 @@ Rectangle {
     property bool surahPickerOpen: false
     property var backend: typeof quranBackend !== "undefined" && quranBackend !== null ? quranBackend : null
     readonly property var fallbackVerses: [
-        { num: 1, arabic: "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِينَ", kanzul: "Kanzul Iman preview text loads from bundled data in the app.", irfan: "Kanzul Irfan is not present in bundled quran.json.", jalayn: "Tafsir Jalalayn preview text loads from bundled data in the app.", source: "Preview fallback" },
+        { num: 1, arabic: "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِينَ", kanzul: "Kanzul Iman preview text loads from bundled data in the app.", irfan: "Kanzul Irfan is not present in bundled quran.db.", jalayn: "Tafsir Jalalayn preview text loads from bundled data in the app.", source: "Preview fallback" },
         { num: 2, arabic: "ٱلرَّحۡمَـٰنِ ٱلرَّحِيمِ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" },
         { num: 3, arabic: "مَـٰلِكِ يَوۡمِ ٱلدِّينِ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" },
         { num: 4, arabic: "إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" },
@@ -29,8 +29,13 @@ Rectangle {
 
     Component.onCompleted: {
         console.log("QuranPage backend available:", backend !== null)
-        if (backend !== null)
-            backend.loadSurah(selectedSurah)
+    }
+
+    Timer {
+        interval: 1
+        running: quranRoot.backend !== null
+        repeat: false
+        onTriggered: quranRoot.backend.loadSurah(quranRoot.selectedSurah)
     }
 
     Connections {
@@ -75,7 +80,7 @@ Rectangle {
             target: quranLbl; property: "x"
             Keyframe { value: quranRoot.width * 0.5 - quranLbl.width * 0.5; frame: 0 }
             Keyframe { value: quranRoot.width * 0.5 - quranLbl.width * 0.5; frame: 60 }
-            Keyframe { value: 883; frame: 70 }
+            Keyframe { value: Math.max(16, quranRoot.width - quranLbl.width - 24); frame: 70 }
         }
         KeyframeGroup {
             target: quranLbl; property: "y"

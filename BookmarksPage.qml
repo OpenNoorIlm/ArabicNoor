@@ -56,7 +56,7 @@ Rectangle {
             }
 
             Keyframe {
-                value: 883
+                value: Math.max(16, bookmarkRoot.width - bookmarkLbl.width - 24)
                 frame: 70
             }
         }
@@ -96,4 +96,3 @@ Rectangle {
     }
 
 }
-

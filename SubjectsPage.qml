@@ -1,317 +1,116 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Timeline 1.0
 
 Rectangle {
-    id: rectangle
+    id: subjectsPage
     width: parent ? parent.width : Screen.width
     height: parent ? parent.height : Screen.height
     color: "#1a1a2e"
 
-    Label {
-        id: subjectLbl
-        anchors.centerIn: parent
-        text: "📚 Subjects"
-        color: "#c9a84c"
-        font.pixelSize: 28
-        anchors.verticalCenterOffset: -500
-        anchors.horizontalCenterOffset: 0
-        font.bold: true
-    }
+    property real pageMargin: Math.max(16, Math.min(width * 0.05, 48))
+    property real contentWidth: Math.min(width - pageMargin * 2, 760)
 
-    Timeline {
-        id: timeline
-        animations: [
-            TimelineAnimation {
-                id: dropAnim
-                pingPong: false
-                running: true
-                loops: 1
-                to: 70
-                from: 0
-                duration: 1200
-            },
-            TimelineAnimation {
-                id: timelineAnimation
-                running: false
-                loops: 1
-                to: 70
-                from: 0
-            }
-        ]
-        startFrame: 0
-        endFrame: 70
-        enabled: true
-
-        KeyframeGroup {
-            target: subjectLbl
-            property: "x"
-            Keyframe {
-                value: window.width * 0.5 - subjectLbl.width * 0.5
-                frame: 0
-            }
-            Keyframe {
-                value: window.width * 0.5 - subjectLbl.width * 0.5
-                frame: 60
-            }
-
-            Keyframe {
-                value: 883
-                frame: 70
-            }
-        }
-
-        KeyframeGroup {
-            target: subjectLbl
-            property: "y"
-            Keyframe {
-                value: -subjectLbl.height
-                frame: 0
-            }
-            Keyframe {
-                easing.type: Easing.OutCubic
-                value: window.height * 0.5 - subjectLbl.height * 0.5
-                frame: 60
-            }
-
-            Keyframe {
-                value: 24
-                frame: 70
-            }
-        }
-
-        KeyframeGroup {
-            target: subjectLbl
-            property: "opacity"
-            Keyframe {
-                value: 0
-                frame: 0
-            }
-            Keyframe {
-                easing.type: Easing.OutCubic
-                value: 1
-                frame: 60
-            }
-        }
-    }
-
-    Button {
-        id: sarfBtn
-        text: qsTr("Sarf")
-        anchors.left: parent.left
-        anchors.right: parent.right
+    Column {
+        id: contentColumn
         anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: 748
-        anchors.rightMargin: 748
-        anchors.topMargin: 326
-        anchors.bottomMargin: 629
-        icon.color: "#c9a749"
-        font.pointSize: 35
-        display: AbstractButton.TextUnderIcon
-        clip: false
-        opacity: 0
+        anchors.topMargin: 24
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: subjectsPage.contentWidth
+        spacing: Math.max(14, subjectsPage.height * 0.025)
 
-        Component.onCompleted: sarfFadeIn.start()
-
-        ParallelAnimation {
-            id: sarfFadeIn
-            NumberAnimation { target: sarfBtn; property: "opacity"; from: 0; to: 1; duration: 500; easing.type: Easing.OutCubic }
-            NumberAnimation { target: sarfBtn; property: "scale"; from: 0.7; to: 1.0; duration: 500; easing.type: Easing.OutBack }
+        Label {
+            text: "📚 Subjects"
+            color: "#c9a84c"
+            font.pixelSize: Math.max(24, Math.min(subjectsPage.width * 0.045, 34))
+            font.bold: true
+            anchors.horizontalCenter: parent.horizontalCenter
         }
 
-        scale: sarfBtn.pressed ? 0.92 : sarfBtnMouse.containsMouse ? 1.06 : 1.0
-        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
-
-        background: Rectangle {
-            radius: 16
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: sarfBtnMouse.containsMouse ? "#2a4a8a" : "#162447" }
-                GradientStop { position: 1.0; color: sarfBtnMouse.containsMouse ? "#1a2f5a" : "#0d1b36" }
-            }
-            border.color: sarfBtnMouse.containsMouse ? "#c9a84c" : "#8b6914"
-            border.width: sarfBtnMouse.containsMouse ? 2 : 1
-            Behavior on border.width { NumberAnimation { duration: 200 } }
-
-            Rectangle {
-                id: sarfGlow
-                anchors.fill: parent
-                radius: parent.radius
-                color: "transparent"
-                border.color: "#c9a84c"
-                border.width: 0
-                opacity: 0.6
-                visible: sarfBtnMouse.containsMouse
-                SequentialAnimation on border.width {
-                    running: sarfBtnMouse.containsMouse
-                    loops: Animation.Infinite
-                    NumberAnimation { from: 2; to: 5; duration: 700; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: 5; to: 2; duration: 700; easing.type: Easing.InOutSine }
-                }
-            }
-        }
-
-        contentItem: Text {
-            text: sarfBtn.text
-            font: sarfBtn.font
-            color: sarfBtnMouse.containsMouse ? "#ffffff" : "#c9a84c"
+        Label {
+            width: parent.width
+            text: "Choose a subject to open its lesson store."
+            color: "#9badc8"
+            font.pixelSize: Math.max(13, Math.min(subjectsPage.width * 0.018, 16))
             horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            Behavior on color { ColorAnimation { duration: 200 } }
+            wrapMode: Text.WordWrap
         }
 
-        MouseArea {
-            id: sarfBtnMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: sarfBtn.clicked()
+        Repeater {
+            model: [
+                { title: "Sarf", subtitle: "Word forms and morphology", page: "SarfPage.qml" },
+                { title: "Nahw", subtitle: "Grammar and sentence structure", page: "NahwPage.qml" },
+                { title: "Arabic", subtitle: "Arabic language lessons", page: "ArabicPage.qml" }
+            ]
+
+            delegate: Button {
+                id: subjectButton
+                width: parent.width
+                height: Math.max(82, Math.min(subjectsPage.height * 0.14, 120))
+                text: modelData.title
+                opacity: 0
+
+                Component.onCompleted: subjectButtonFadeIn.start()
+
+                ParallelAnimation {
+                    id: subjectButtonFadeIn
+                    NumberAnimation {
+                        target: subjectButton
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 420 + index * 80
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: subjectButton
+                        property: "scale"
+                        from: 0.92
+                        to: 1.0
+                        duration: 420 + index * 80
+                        easing.type: Easing.OutBack
+                    }
+                }
+
+                scale: pressed ? 0.97 : hovered ? 1.02 : 1.0
+                Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+
+                background: Rectangle {
+                    radius: 16
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: subjectButton.hovered ? "#2a4a8a" : "#162447" }
+                        GradientStop { position: 1.0; color: subjectButton.hovered ? "#1a2f5a" : "#0d1b36" }
+                    }
+                    border.color: subjectButton.hovered ? "#c9a84c" : "#8b6914"
+                    border.width: subjectButton.hovered ? 2 : 1
+                }
+
+                contentItem: Column {
+                    anchors.fill: parent
+                    anchors.margins: 14
+                    spacing: 4
+
+                    Text {
+                        width: parent.width
+                        text: subjectButton.text
+                        color: subjectButton.hovered ? "#ffffff" : "#c9a84c"
+                        font.pixelSize: Math.max(22, Math.min(subjectsPage.width * 0.04, 34))
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: modelData.subtitle
+                        color: "#9badc8"
+                        font.pixelSize: Math.max(12, Math.min(subjectsPage.width * 0.017, 15))
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                    }
+                }
+
+                onClicked: stackView.replace(modelData.page)
+            }
         }
     }
-
-    Button {
-        id: sarfBtn1
-        text: qsTr("Nahw")
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: 748
-        anchors.rightMargin: 748
-        anchors.topMargin: 589
-        anchors.bottomMargin: 366
-        icon.color: "#c9a749"
-        font.pointSize: 35
-        display: AbstractButton.TextUnderIcon
-        clip: false
-        opacity: 0
-
-        Component.onCompleted: nahwFadeIn.start()
-
-        ParallelAnimation {
-            id: nahwFadeIn
-            NumberAnimation { target: sarfBtn1; property: "opacity"; from: 0; to: 1; duration: 500; easing.type: Easing.OutCubic; }
-            NumberAnimation { target: sarfBtn1; property: "scale"; from: 0.7; to: 1.0; duration: 600; easing.type: Easing.OutBack; }
-        }
-
-        scale: sarfBtn1.pressed ? 0.92 : nahwBtnMouse.containsMouse ? 1.06 : 1.0
-        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
-
-        background: Rectangle {
-            radius: 16
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: nahwBtnMouse.containsMouse ? "#2a4a8a" : "#162447" }
-                GradientStop { position: 1.0; color: nahwBtnMouse.containsMouse ? "#1a2f5a" : "#0d1b36" }
-            }
-            border.color: nahwBtnMouse.containsMouse ? "#c9a84c" : "#8b6914"
-            border.width: nahwBtnMouse.containsMouse ? 2 : 1
-            Behavior on border.width { NumberAnimation { duration: 200 } }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                color: "transparent"
-                border.color: "#c9a84c"
-                border.width: 0
-                opacity: 0.6
-                visible: nahwBtnMouse.containsMouse
-                SequentialAnimation on border.width {
-                    running: nahwBtnMouse.containsMouse
-                    loops: Animation.Infinite
-                    NumberAnimation { from: 2; to: 5; duration: 700; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: 5; to: 2; duration: 700; easing.type: Easing.InOutSine }
-                }
-            }
-        }
-
-        contentItem: Text {
-            text: sarfBtn1.text
-            font: sarfBtn1.font
-            color: nahwBtnMouse.containsMouse ? "#ffffff" : "#c9a84c"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            Behavior on color { ColorAnimation { duration: 200 } }
-        }
-
-        MouseArea {
-            id: nahwBtnMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: sarfBtn1.clicked()
-        }
-    }
-
-    Button {
-        id: sarfBtn2
-        text: qsTr("Arabic")
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: 748
-        anchors.rightMargin: 748
-        anchors.topMargin: 876
-        anchors.bottomMargin: 79
-        icon.color: "#c9a749"
-        font.pointSize: 35
-        display: AbstractButton.TextUnderIcon
-        clip: false
-        opacity: 0
-
-        Component.onCompleted: arabicFadeIn.start()
-
-        ParallelAnimation {
-            id: arabicFadeIn
-            NumberAnimation { target: sarfBtn2; property: "opacity"; from: 0; to: 1; duration: 500; easing.type: Easing.OutCubic; }
-            NumberAnimation { target: sarfBtn2; property: "scale"; from: 0.7; to: 1.0; duration: 700; easing.type: Easing.OutBack; }
-        }
-
-        scale: sarfBtn2.pressed ? 0.92 : arabicBtnMouse.containsMouse ? 1.06 : 1.0
-        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
-
-        background: Rectangle {
-            radius: 16
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: arabicBtnMouse.containsMouse ? "#2a4a8a" : "#162447" }
-                GradientStop { position: 1.0; color: arabicBtnMouse.containsMouse ? "#1a2f5a" : "#0d1b36" }
-            }
-            border.color: arabicBtnMouse.containsMouse ? "#c9a84c" : "#8b6914"
-            border.width: arabicBtnMouse.containsMouse ? 2 : 1
-            Behavior on border.width { NumberAnimation { duration: 200 } }
-
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                color: "transparent"
-                border.color: "#c9a84c"
-                border.width: 0
-                opacity: 0.6
-                visible: arabicBtnMouse.containsMouse
-                SequentialAnimation on border.width {
-                    running: arabicBtnMouse.containsMouse
-                    loops: Animation.Infinite
-                    NumberAnimation { from: 2; to: 5; duration: 700; easing.type: Easing.InOutSine }
-                    NumberAnimation { from: 5; to: 2; duration: 700; easing.type: Easing.InOutSine }
-                }
-            }
-        }
-
-        contentItem: Text {
-            text: sarfBtn2.text
-            font: sarfBtn2.font
-            color: arabicBtnMouse.containsMouse ? "#ffffff" : "#c9a84c"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            Behavior on color { ColorAnimation { duration: 200 } }
-        }
-
-        MouseArea {
-            id: arabicBtnMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: sarfBtn2.clicked()
-        }
-    }
-
-
 }
-
