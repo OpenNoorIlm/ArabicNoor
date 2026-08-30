@@ -15,4 +15,4 @@ Makefile
 *.qmlc
 *.jsc
 *.qmlcache
-.DownloadsOfApp/
+DownloadsOfApp/
