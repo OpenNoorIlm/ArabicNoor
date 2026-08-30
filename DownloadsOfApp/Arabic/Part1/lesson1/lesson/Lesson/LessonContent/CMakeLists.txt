@@ -12,14 +12,14 @@ qt6_add_qml_module(LessonContent
         "App.qml"
         "Screen01.ui.qml"
     RESOURCES
-        "smoke_sprite2.png"
         "blurred_sphere.png"
-        "ripple.png"
-        "splash7.png"
-        "rain.png"
-        "color_table2.png"
         "color_table.png"
+        "color_table2.png"
+        "rain.png"
+        "ripple.png"
         "smoke_sprite.png"
+        "smoke_sprite2.png"
+        "splash7.png"
 )
 
 
