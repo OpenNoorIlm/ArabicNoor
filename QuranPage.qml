@@ -16,6 +16,8 @@ Rectangle {
     property bool showTafsir: false
     property bool showTranslit: false
     property bool surahPickerOpen: false
+    property int pendingScrollAyah: 0
+    property string gotoStatus: ""
     property var backend: typeof quranBackend !== "undefined" && quranBackend !== null ? quranBackend : null
     readonly property var fallbackVerses: [
         { num: 1, arabic: "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِينَ", kanzul: "Kanzul Iman preview text loads from bundled data in the app.", irfan: "Kanzul Irfan is not present in bundled quran.db.", jalayn: "Tafsir Jalalayn preview text loads from bundled data in the app.", source: "Preview fallback" },
@@ -26,6 +28,15 @@ Rectangle {
         { num: 6, arabic: "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ", kanzul: "", irfan: "", jalayn: "", source: "Preview fallback" }
     ]
     property var verses: backend !== null && backend.verses.length > 0 ? backend.verses : fallbackVerses
+
+    readonly property var gotoTypes: [
+        { label: "Ayah", key: "ayah" },
+        { label: "Page", key: "page" },
+        { label: "Juz", key: "juz" },
+        { label: "Manzil", key: "manzil" },
+        { label: "Ruku", key: "ruku" },
+        { label: "Hizb ¼", key: "hizbQuarter" }
+    ]
 
     Component.onCompleted: {
         console.log("QuranPage backend available:", backend !== null)
@@ -42,7 +53,46 @@ Rectangle {
         target: quranRoot.backend
         function onVersesChanged() {
             console.log("QuranPage received verses:", quranRoot.backend.verses.length)
+            if (quranRoot.pendingScrollAyah > 0 && quranRoot.backend.verses.length > 0)
+                quranRoot.scrollToAyah(quranRoot.pendingScrollAyah)
         }
+    }
+
+    function gotoMaximum(type) {
+        return backend !== null ? backend.referenceMaximum(type) : 0
+    }
+
+    function requestGoto() {
+        if (backend === null) {
+            gotoStatus = "C++ backend is not available."
+            return
+        }
+
+        var value = parseInt(gotoField.text)
+        var type = gotoTypeBox.currentValue
+        var result = backend.resolveReference(type, value)
+
+        if (!result.ok) {
+            gotoStatus = result.error || "Could not find that reference."
+            return
+        }
+
+        selectedSurah = result.surah
+        selectedSurahName = surahNames[result.surah - 1]
+        surahPickerOpen = false
+        pendingScrollAyah = result.ayah
+        gotoStatus = result.label
+        backend.loadSurah(result.surah)
+    }
+
+    function scrollToAyah(ayah) {
+        Qt.callLater(function() {
+            var item = verseRepeater.itemAt(ayah - 1)
+            if (item) {
+                verseScroll.contentItem.contentY = Math.max(0, item.y - 12)
+                pendingScrollAyah = 0
+            }
+        })
     }
 
     readonly property var surahNames: [
@@ -219,10 +269,116 @@ Rectangle {
         }
     }
 
+    // ── Go to bar ────────────────────────────────────────────────────────
+    Rectangle {
+        id: gotoBar
+        anchors.top: toggleBar.bottom
+        anchors.left: parent.left; anchors.right: parent.right
+        height: 48
+        color: "#0d1b36"
+        z: 2
+
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 1
+            color: "#c9a84c"
+            opacity: 0.12
+        }
+
+        Row {
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+            anchors.right: parent.right
+            anchors.rightMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 8
+
+            Label {
+                text: "Go to"
+                color: "#c9a84c"
+                font.pixelSize: 12
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            ComboBox {
+                id: gotoTypeBox
+                width: Math.min(130, quranRoot.width * 0.25)
+                height: 32
+                model: quranRoot.gotoTypes
+                textRole: "label"
+                valueRole: "key"
+                anchors.verticalCenter: parent.verticalCenter
+                onCurrentValueChanged: gotoField.text = ""
+            }
+
+            TextField {
+                id: gotoField
+                width: Math.min(86, quranRoot.width * 0.18)
+                height: 32
+                placeholderText: "1"
+                inputMethodHints: Qt.ImhDigitsOnly
+                validator: IntValidator {
+                    bottom: 1
+                    top: quranRoot.gotoMaximum(gotoTypeBox.currentValue)
+                }
+                color: "#ffffff"
+                selectedTextColor: "#1a1a2e"
+                selectionColor: "#c9a84c"
+                font.pixelSize: 13
+                anchors.verticalCenter: parent.verticalCenter
+                onAccepted: quranRoot.requestGoto()
+            }
+
+            Label {
+                text: "of " + quranRoot.gotoMaximum(gotoTypeBox.currentValue)
+                color: "#8a9abf"
+                font.pixelSize: 12
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Rectangle {
+                width: 56
+                height: 32
+                radius: 7
+                color: goMouse.pressed ? "#b89236" : "#c9a84c"
+                border.color: "#e0c66a"
+                border.width: 1
+                anchors.verticalCenter: parent.verticalCenter
+
+                Label {
+                    text: "Go"
+                    color: "#1a1a2e"
+                    font.pixelSize: 12
+                    font.bold: true
+                    anchors.centerIn: parent
+                }
+
+                MouseArea {
+                    id: goMouse
+                    anchors.fill: parent
+                    onClicked: quranRoot.requestGoto()
+                }
+            }
+
+            Label {
+                width: Math.max(0, parent.width - 430)
+                text: quranRoot.gotoStatus
+                color: quranRoot.gotoStatus.indexOf("Enter") === 0 || quranRoot.gotoStatus.indexOf("Could") === 0 ? "#ff9a9a" : "#7a8aaa"
+                font.pixelSize: 11
+                elide: Text.ElideRight
+                anchors.verticalCenter: parent.verticalCenter
+                visible: width > 80
+            }
+        }
+    }
+
     // ── Surah dropdown picker ─────────────────────────────────────────────
     Rectangle {
         id: surahDropdown
-        anchors.top: toggleBar.bottom
+        anchors.top: gotoBar.bottom
         anchors.left: parent.left; anchors.right: parent.right
         height: quranRoot.surahPickerOpen ? Math.min(300, quranRoot.height * 0.4) : 0
         color: "#0d1b36"; z: 3; clip: true
@@ -290,6 +446,7 @@ Rectangle {
 
     // ── Verse view ────────────────────────────────────────────────────────
     ScrollView {
+        id: verseScroll
         anchors.top: surahDropdown.bottom
         anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
         clip: true
@@ -325,6 +482,7 @@ Rectangle {
             }
 
             Repeater {
+                id: verseRepeater
                 model: quranRoot.verses
 
                 delegate: Rectangle {

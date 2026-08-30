@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QVariantList>
+#include <QVariantMap>
 #include <QString>
 
 class QuranBackend : public QObject {
@@ -18,6 +19,8 @@ public:
     QString error() const { return m_error; }
 
     Q_INVOKABLE void loadSurah(int number);
+    Q_INVOKABLE QVariantMap resolveReference(const QString &referenceType, int value);
+    Q_INVOKABLE int referenceMaximum(const QString &referenceType) const;
 
 signals:
     void versesChanged();
