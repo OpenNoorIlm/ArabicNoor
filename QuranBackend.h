@@ -19,8 +19,9 @@ public:
     QString error() const { return m_error; }
 
     Q_INVOKABLE void loadSurah(int number);
-    Q_INVOKABLE QVariantMap resolveReference(const QString &referenceType, int value);
+    Q_INVOKABLE QVariantMap resolveReference(const QString &referenceType, int value, int currentSurah);
     Q_INVOKABLE int referenceMaximum(const QString &referenceType) const;
+    Q_INVOKABLE int surahAyahMaximum(int surahNumber);
 
 signals:
     void versesChanged();

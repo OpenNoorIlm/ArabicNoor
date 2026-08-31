@@ -88,7 +88,7 @@ void QuranBackend::loadSurah(int number)
     qDebug() << "QuranBackend loaded DB verses:" << m_verses.size();
 }
 
-QVariantMap QuranBackend::resolveReference(const QString &referenceType, int value)
+QVariantMap QuranBackend::resolveReference(const QString &referenceType, int value, int currentSurah)
 {
     QVariantMap result;
     result.insert(QStringLiteral("ok"), false);
@@ -96,7 +96,9 @@ QVariantMap QuranBackend::resolveReference(const QString &referenceType, int val
     result.insert(QStringLiteral("ayah"), 0);
 
     const QString type = referenceType.trimmed().toLower();
-    const int maximum = referenceMaximum(type);
+    const int maximum = type == QStringLiteral("surahayah")
+                            ? surahAyahMaximum(currentSurah)
+                            : referenceMaximum(type);
     if (maximum <= 0) {
         result.insert(QStringLiteral("error"), tr("Unknown Quran reference type."));
         return result;
@@ -113,9 +115,34 @@ QVariantMap QuranBackend::resolveReference(const QString &referenceType, int val
     QString column;
     QString label;
 
-    if (type == QStringLiteral("ayah")) {
+    if (type == QStringLiteral("surahayah")) {
+        QSqlDatabase db = QSqlDatabase::database(m_connectionName);
+        QSqlQuery query(db);
+        query.prepare(QStringLiteral(
+            "SELECT surah, ayah "
+            "FROM verses "
+            "WHERE surah = :surah AND ayah = :ayah "
+            "LIMIT 1"));
+        query.bindValue(QStringLiteral(":surah"), currentSurah);
+        query.bindValue(QStringLiteral(":ayah"), value);
+
+        if (!query.exec() || !query.next()) {
+            result.insert(QStringLiteral("error"), tr("Could not find that ayah in this surah."));
+            qWarning() << "QuranBackend surah ayah lookup failed:"
+                       << currentSurah << value << query.lastError().text();
+            return result;
+        }
+
+        result.insert(QStringLiteral("ok"), true);
+        result.insert(QStringLiteral("surah"), query.value(0).toInt());
+        result.insert(QStringLiteral("ayah"), query.value(1).toInt());
+        result.insert(QStringLiteral("label"), tr("Go to Surah %1, Ayah %2")
+                      .arg(query.value(0).toInt())
+                      .arg(query.value(1).toInt()));
+        return result;
+    } else if (type == QStringLiteral("ayah")) {
         column = QStringLiteral("id");
-        label = tr("ayah");
+        label = tr("Quran ayah");
     } else if (type == QStringLiteral("juz")) {
         column = QStringLiteral("juz");
         label = tr("juz");
@@ -161,6 +188,30 @@ QVariantMap QuranBackend::resolveReference(const QString &referenceType, int val
                   .arg(surah)
                   .arg(ayah));
     return result;
+}
+
+int QuranBackend::surahAyahMaximum(int surahNumber)
+{
+    if (surahNumber < 1 || surahNumber > 114)
+        return 0;
+
+    if (!ensureDatabase())
+        return 0;
+
+    QSqlDatabase db = QSqlDatabase::database(m_connectionName);
+    QSqlQuery query(db);
+    query.prepare(QStringLiteral(
+        "SELECT MAX(ayah) "
+        "FROM verses "
+        "WHERE surah = :surah"));
+    query.bindValue(QStringLiteral(":surah"), surahNumber);
+
+    if (!query.exec() || !query.next()) {
+        qWarning() << "QuranBackend surah max lookup failed:" << query.lastError().text();
+        return 0;
+    }
+
+    return query.value(0).toInt();
 }
 
 int QuranBackend::referenceMaximum(const QString &referenceType) const

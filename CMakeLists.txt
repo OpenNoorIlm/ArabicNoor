@@ -21,6 +21,8 @@ qt_add_executable(appNoorArabic
     PrayerTimesBackend.cpp
     LessonStoreBackend.h
     LessonStoreBackend.cpp
+    SettingsBackend.h
+    SettingsBackend.cpp
 )
 
 qt_add_qml_module(appNoorArabic

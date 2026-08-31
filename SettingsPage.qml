@@ -6,13 +6,24 @@ Rectangle {
     id: settingsRoot
     width: parent ? parent.width : Screen.width
     height: parent ? parent.height : Screen.height
-    color: "#1a1a2e"
+    color: darkMode ? "#1a1a2e" : "#f4efe2"
 
     // ── Toggles state ─────────────────────────────────────────────────────
-    property bool darkMode: true
-    property bool showTafsir: false
-    property bool showTranslit: true
-    property bool prayerNotifications: true
+    property var backend: typeof settingsBackend !== "undefined" && settingsBackend !== null ? settingsBackend : null
+    property bool darkMode: backend !== null ? backend.darkMode : true
+    property bool showTafsir: backend !== null ? backend.showTafsir : false
+    property bool showTranslit: backend !== null ? backend.showTransliteration : true
+    property bool prayerNotifications: backend !== null ? backend.prayerNotifications : true
+
+    function cycleSetting(key) {
+        if (backend !== null)
+            backend.cycleSetting(key)
+    }
+
+    function setSettingBool(key, value) {
+        if (backend !== null)
+            backend.setBool(key, value)
+    }
 
     // ── Heading ───────────────────────────────────────────────────────────
     Label {
@@ -32,7 +43,7 @@ Rectangle {
             target: settingLbl; property: "x"
             Keyframe { value: settingsRoot.width * 0.5 - settingLbl.width * 0.5; frame: 0 }
             Keyframe { value: settingsRoot.width * 0.5 - settingLbl.width * 0.5; frame: 60 }
-            Keyframe { value: Math.max(16, settingsRoot.width - settingsLbl.width - 24); frame: 70 }
+            Keyframe { value: Math.max(16, settingsRoot.width - settingLbl.width - 24); frame: 70 }
         }
         KeyframeGroup {
             target: settingLbl; property: "y"
@@ -93,25 +104,28 @@ Rectangle {
                     hasToggle: true
                     toggleValue: settingsRoot.darkMode
                     animDelay: 100
-                    onToggled: (val) => settingsRoot.darkMode = val
+                    onToggled: (val) => settingsRoot.setSettingBool("darkMode", val)
                 }
                 SettingRow {
                     label: "Gold Accent Colour"
-                    sublabel: "#c9a84c — Islamic gold"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.accentColor : "#c9a84c"
                     hasChevron: true
                     animDelay: 160
+                    onTapped: settingsRoot.cycleSetting("accentColor")
                 }
                 SettingRow {
                     label: "Font Size"
-                    sublabel: "Medium (15px)"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.fontSize : "Medium"
                     hasChevron: true
                     animDelay: 220
+                    onTapped: settingsRoot.cycleSetting("fontSize")
                 }
                 SettingRow {
                     label: "Arabic Font"
-                    sublabel: "System default"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.arabicFont : "System default"
                     hasChevron: true
                     animDelay: 280
+                    onTapped: settingsRoot.cycleSetting("arabicFont")
                 }
 
                 Item { width: 1; height: 8 }
@@ -121,35 +135,38 @@ Rectangle {
 
                 SettingRow {
                     label: "Default Translation"
-                    sublabel: "Kanzul Iman (Urdu)"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.defaultTranslation : "Kanzul Iman"
                     hasChevron: true
                     animDelay: 360
+                    onTapped: settingsRoot.cycleSetting("defaultTranslation")
                 }
                 SettingRow {
                     label: "Show Tafsir by Default"
                     hasToggle: true
                     toggleValue: settingsRoot.showTafsir
                     animDelay: 420
-                    onToggled: (val) => settingsRoot.showTafsir = val
+                    onToggled: (val) => settingsRoot.setSettingBool("showTafsir", val)
                 }
                 SettingRow {
                     label: "Show Transliteration"
                     hasToggle: true
                     toggleValue: settingsRoot.showTranslit
                     animDelay: 480
-                    onToggled: (val) => settingsRoot.showTranslit = val
+                    onToggled: (val) => settingsRoot.setSettingBool("showTransliteration", val)
                 }
                 SettingRow {
                     label: "Arabic Script"
-                    sublabel: "Uthmani"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.arabicScript : "Uthmani"
                     hasChevron: true
                     animDelay: 540
+                    onTapped: settingsRoot.cycleSetting("arabicScript")
                 }
                 SettingRow {
                     label: "Auto-scroll Speed"
-                    sublabel: "Normal"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.autoScrollSpeed : "Normal"
                     hasChevron: true
                     animDelay: 600
+                    onTapped: settingsRoot.cycleSetting("autoScrollSpeed")
                 }
 
                 Item { width: 1; height: 8 }
@@ -159,34 +176,38 @@ Rectangle {
 
                 SettingRow {
                     label: "Calculation Method"
-                    sublabel: "Karachi (Hanafi)"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.calculationMethod : "Karachi"
                     hasChevron: true
                     animDelay: 680
+                    onTapped: settingsRoot.cycleSetting("calculationMethod")
                 }
                 SettingRow {
                     label: "Asr Method"
-                    sublabel: "Hanafi (shadow = 2×)"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.asrMethod : "Hanafi"
                     hasChevron: true
                     animDelay: 740
+                    onTapped: settingsRoot.cycleSetting("asrMethod")
                 }
                 SettingRow {
                     label: "Location"
-                    sublabel: "Auto-detect or manual"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.location : "Mysuru, Karnataka, India"
                     hasChevron: true
                     animDelay: 800
+                    onTapped: settingsRoot.cycleSetting("location")
                 }
                 SettingRow {
                     label: "Prayer Notifications"
                     hasToggle: true
                     toggleValue: settingsRoot.prayerNotifications
                     animDelay: 860
-                    onToggled: (val) => settingsRoot.prayerNotifications = val
+                    onToggled: (val) => settingsRoot.setSettingBool("prayerNotifications", val)
                 }
                 SettingRow {
                     label: "Adhan Sound"
-                    sublabel: "Makkah"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.adhanSound : "Makkah"
                     hasChevron: true
                     animDelay: 920
+                    onTapped: settingsRoot.cycleSetting("adhanSound")
                 }
 
                 Item { width: 1; height: 8 }
@@ -196,15 +217,17 @@ Rectangle {
 
                 SettingRow {
                     label: "App Language"
-                    sublabel: "English"
+                    sublabel: settingsRoot.backend !== null ? settingsRoot.backend.appLanguage : "English"
                     hasChevron: true
                     animDelay: 1000
+                    onTapped: settingsRoot.cycleSetting("appLanguage")
                 }
                 SettingRow {
                     label: "Hijri Calendar Offset"
-                    sublabel: "0 days"
+                    sublabel: (settingsRoot.backend !== null ? settingsRoot.backend.hijriOffset : 0) + " days"
                     hasChevron: true
                     animDelay: 1060
+                    onTapped: settingsRoot.cycleSetting("hijriOffset")
                 }
 
                 Item { width: 1; height: 8 }
@@ -266,10 +289,8 @@ Rectangle {
         }
 
         onAccepted: {
-            settingsRoot.darkMode = true
-            settingsRoot.showTafsir = false
-            settingsRoot.showTranslit = true
-            settingsRoot.prayerNotifications = true
+            if (settingsRoot.backend !== null)
+                settingsRoot.backend.resetAll()
         }
     }
 }

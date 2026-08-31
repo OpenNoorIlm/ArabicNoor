@@ -8,7 +8,8 @@ Rectangle {
     height: parent ? parent.height : Screen.height
     color: "#1a1a2e"
 
-    property string locationText: "Mysuru, Karnataka, India"
+    property var settings: typeof settingsBackend !== "undefined" && settingsBackend !== null ? settingsBackend : null
+    property string locationText: settings !== null ? settings.location : "Mysuru, Karnataka, India"
     property bool locationSearchMode: false
     property string searchQuery: ""
     property int nextPrayerIndex: 4
@@ -33,7 +34,7 @@ Rectangle {
         interval: 1
         running: prayerRoot.backend !== null
         repeat: false
-        onTriggered: prayerRoot.backend.loadCity("Mysuru", "India")
+        onTriggered: prayerRoot.backend.loadAddress(prayerRoot.locationText)
     }
 
     function loadPrayerLocation(value) {
@@ -44,6 +45,8 @@ Rectangle {
         prayerRoot.locationText = query
         prayerRoot.locationSearchMode = false
         prayerRoot.searchQuery = ""
+        if (settings !== null)
+            settings.setString("location", query)
         console.log("PrayerTimesPage requested location:", query, "backend:", backend !== null)
         if (backend !== null)
             backend.loadAddress(query)

@@ -7,6 +7,7 @@
 #include "QuranBackend.h"
 #include "PrayerTimesBackend.h"
 #include "LessonStoreBackend.h"
+#include "SettingsBackend.h"
 
 int main(int argc, char *argv[])
 {
@@ -17,9 +18,11 @@ int main(int argc, char *argv[])
     QuranBackend quranBackend;
     PrayerTimesBackend prayerTimesBackend;
     LessonStoreBackend lessonStoreBackend;
+    SettingsBackend settingsBackend;
     engine.rootContext()->setContextProperty("quranBackend", &quranBackend);
     engine.rootContext()->setContextProperty("prayerTimesBackend", &prayerTimesBackend);
     engine.rootContext()->setContextProperty("lessonStoreBackend", &lessonStoreBackend);
+    engine.rootContext()->setContextProperty("settingsBackend", &settingsBackend);
     qDebug() << "NoorArabic C++ backends registered";
 #if !defined(Q_OS_ANDROID) && !defined(Q_OS_WASM)
     engine.addImportPath(QStringLiteral(QDS_QML_IMPORT_PATH));

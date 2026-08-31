@@ -10,11 +10,12 @@ Rectangle {
 
     property int selectedSurah: 1
     property string selectedSurahName: "Al-Fatiha"
-    property string selectedTranslation: "Kanzul Iman"
+    property var settings: typeof settingsBackend !== "undefined" && settingsBackend !== null ? settingsBackend : null
+    property string selectedTranslation: settings !== null ? settings.defaultTranslation : "Kanzul Iman"
     property bool showArabic: true
     property bool showTranslation: true
-    property bool showTafsir: false
-    property bool showTranslit: false
+    property bool showTafsir: settings !== null ? settings.showTafsir : false
+    property bool showTranslit: settings !== null ? settings.showTransliteration : false
     property bool surahPickerOpen: false
     property int pendingScrollAyah: 0
     property string gotoStatus: ""
@@ -30,7 +31,8 @@ Rectangle {
     property var verses: backend !== null && backend.verses.length > 0 ? backend.verses : fallbackVerses
 
     readonly property var gotoTypes: [
-        { label: "Ayah", key: "ayah" },
+        { label: "Surah Ayah", key: "surahAyah" },
+        { label: "Quran Ayah", key: "ayah" },
         { label: "Page", key: "page" },
         { label: "Juz", key: "juz" },
         { label: "Manzil", key: "manzil" },
@@ -59,7 +61,11 @@ Rectangle {
     }
 
     function gotoMaximum(type) {
-        return backend !== null ? backend.referenceMaximum(type) : 0
+        if (backend === null)
+            return 0
+        if (type === "surahAyah")
+            return backend.surahAyahMaximum(selectedSurah)
+        return backend.referenceMaximum(type)
     }
 
     function requestGoto() {
@@ -70,7 +76,7 @@ Rectangle {
 
         var value = parseInt(gotoField.text)
         var type = gotoTypeBox.currentValue
-        var result = backend.resolveReference(type, value)
+        var result = backend.resolveReference(type, value, selectedSurah)
 
         if (!result.ok) {
             gotoStatus = result.error || "Could not find that reference."
@@ -86,13 +92,33 @@ Rectangle {
     }
 
     function scrollToAyah(ayah) {
-        Qt.callLater(function() {
-            var item = verseRepeater.itemAt(ayah - 1)
-            if (item) {
-                verseScroll.contentItem.contentY = Math.max(0, item.y - 12)
-                pendingScrollAyah = 0
+        pendingScrollAyah = ayah
+        scrollRetryTimer.attempts = 0
+        scrollRetryTimer.restart()
+    }
+
+    Timer {
+        id: scrollRetryTimer
+        interval: 40
+        repeat: true
+        property int attempts: 0
+
+        onTriggered: {
+            attempts += 1
+
+            var item = verseRepeater.itemAt(quranRoot.pendingScrollAyah - 1)
+            if (!item || item.height <= 0 || verseColumn.height <= 0) {
+                if (attempts > 30)
+                    stop()
+                return
             }
-        })
+
+            var maxY = Math.max(0, verseScroll.contentHeight - verseScroll.height)
+            verseScroll.contentItem.contentY = Math.min(maxY, Math.max(0, item.y - 12))
+
+            quranRoot.pendingScrollAyah = 0
+            stop()
+        }
     }
 
     readonly property var surahNames: [
@@ -196,7 +222,7 @@ Rectangle {
             spacing: 6
 
             Repeater {
-                model: ["Kanzul Iman", "Kanzul Irfan", "Uthmani"]
+                model: ["Kanzul Iman", "Kanzul Irfan", "Sahih International", "Uthmani"]
                 delegate: Rectangle {
                     width: tLbl.implicitWidth + 14; height: 28; radius: 6
                     color: quranRoot.selectedTranslation === modelData ? "#c9a84c" : "#1e3a6e"
@@ -452,6 +478,7 @@ Rectangle {
         clip: true
 
         Column {
+            id: verseColumn
             width: quranRoot.width
             spacing: 12
 
@@ -536,7 +563,8 @@ Rectangle {
                             visible: quranRoot.showTranslation
                             width: parent.width - 32
                             text: quranRoot.selectedTranslation === "Kanzul Iman" ? (modelData.kanzul || "Kanzul Iman is not present for this verse.") :
-                                  quranRoot.selectedTranslation === "Kanzul Irfan" ? (modelData.irfan || "Kanzul Irfan is not present in bundled quran.json.") :
+                                  quranRoot.selectedTranslation === "Kanzul Irfan" ? (modelData.irfan || "Kanzul Irfan is not present in bundled quran.db.") :
+                                  quranRoot.selectedTranslation === "Sahih International" ? (modelData.sahih || "Sahih International is not present for this verse.") :
                                   "Source: " + modelData.source + " / Uthmani"
                             color: "#c9a84c"; font.pixelSize: 15; wrapMode: Text.WordWrap
                             horizontalAlignment: quranRoot.selectedTranslation === "Uthmani" ? Text.AlignLeft : Text.AlignRight

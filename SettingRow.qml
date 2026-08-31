@@ -97,6 +97,11 @@ Rectangle {
         id: rowMouse
         anchors.fill: parent
         hoverEnabled: true
-        onClicked: sRow.tapped()
+        onClicked: {
+            if (sRow.hasToggle)
+                sRow.toggled(!sRow.toggleValue)
+            else
+                sRow.tapped()
+        }
     }
 }
