@@ -11,6 +11,10 @@
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setOrganizationName(QStringLiteral("OpenNoorIlm"));
+    QCoreApplication::setApplicationName(QStringLiteral("NoorArabic"));
+    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+
     QGuiApplication app(argc, argv);
     QQuickStyle::setStyle("Material");
 

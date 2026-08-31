@@ -6,11 +6,14 @@ Rectangle {
     id: quranRoot
     width: parent ? parent.width : Screen.width
     height: parent ? parent.height : Screen.height
-    color: "#1a1a2e"
+    color: settings !== null && !settings.darkMode ? "#f4efe2" : "#1a1a2e"
 
     property int selectedSurah: 1
     property string selectedSurahName: "Al-Fatiha"
     property var settings: typeof settingsBackend !== "undefined" && settingsBackend !== null ? settingsBackend : null
+    readonly property string accentColor: settings !== null ? settings.accentColor : "#c9a84c"
+    readonly property real fontScale: settings !== null ? settings.fontScale() : 1.0
+    readonly property string arabicFontFamily: settings !== null && settings.arabicFont !== "System default" ? settings.arabicFont : ""
     property string selectedTranslation: settings !== null ? settings.defaultTranslation : "Kanzul Iman"
     property bool showArabic: true
     property bool showTranslation: true
@@ -42,6 +45,53 @@ Rectangle {
 
     Component.onCompleted: {
         console.log("QuranPage backend available:", backend !== null)
+    }
+
+    function scaled(size) {
+        return Math.round(size * fontScale)
+    }
+
+    function displayArabic(text) {
+        if (settings === null || settings.arabicScript !== "Simple")
+            return text
+
+        return String(text).replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+    }
+
+    function autoScrollStep() {
+        if (settings === null)
+            return 0
+
+        if (settings.autoScrollSpeed === "Slow")
+            return 0.35
+        if (settings.autoScrollSpeed === "Normal")
+            return 0.7
+        if (settings.autoScrollSpeed === "Fast")
+            return 1.25
+
+        return 0
+    }
+
+    Connections {
+        target: quranRoot.settings
+        function onSettingsChanged() {
+            if (quranRoot.settings !== null) {
+                quranRoot.selectedTranslation = quranRoot.settings.defaultTranslation
+                quranRoot.showTafsir = quranRoot.settings.showTafsir
+                quranRoot.showTranslit = quranRoot.settings.showTransliteration
+            }
+        }
+    }
+
+    Timer {
+        interval: 50
+        repeat: true
+        running: quranRoot.autoScrollStep() > 0 && verseScroll.contentHeight > verseScroll.height
+        onTriggered: {
+            var maxY = Math.max(0, verseScroll.contentHeight - verseScroll.height)
+            verseScroll.contentItem.contentY = Math.min(maxY,
+                                                        verseScroll.contentItem.contentY + quranRoot.autoScrollStep())
+        }
     }
 
     Timer {
@@ -142,8 +192,8 @@ Rectangle {
     Label {
         id: quranLbl
         text: "📖 Al-Quran"
-        color: "#c9a84c"
-        font.pixelSize: 28
+        color: quranRoot.accentColor
+        font.pixelSize: quranRoot.scaled(28)
         font.bold: true
         z: 2
     }
@@ -176,12 +226,12 @@ Rectangle {
         id: toolbar
         anchors.top: parent.top; anchors.topMargin: 64
         anchors.left: parent.left; anchors.right: parent.right
-        height: 52; color: "#0d1b36"; z: 2
+        height: 52; color: settings !== null && !settings.darkMode ? "#fff8e8" : "#0d1b36"; z: 2
         opacity: 0
         Component.onCompleted: { opacity = 1 }
         Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
 
-        Rectangle { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: "#c9a84c"; opacity: 0.2 }
+        Rectangle { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: quranRoot.accentColor; opacity: 0.2 }
 
         // Surah picker button
         Rectangle {
@@ -189,8 +239,8 @@ Rectangle {
             anchors.left: parent.left; anchors.leftMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             width: surahBtnLbl.implicitWidth + 32; height: 34; radius: 8
-            color: quranRoot.surahPickerOpen ? "#c9a84c" : "#1e3a6e"
-            border.color: "#c9a84c"; border.width: 1
+            color: quranRoot.surahPickerOpen ? quranRoot.accentColor : "#1e3a6e"
+            border.color: quranRoot.accentColor; border.width: 1
             Behavior on color { ColorAnimation { duration: 200 } }
             scale: surahBtnMouse.pressed ? 0.93 : 1.0
             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
@@ -200,14 +250,14 @@ Rectangle {
                 Label {
                     id: surahBtnLbl
                     text: quranRoot.selectedSurah + ". " + quranRoot.selectedSurahName
-                    color: quranRoot.surahPickerOpen ? "#1a1a2e" : "#c9a84c"
-                    font.pixelSize: 13; font.bold: true
+                    color: quranRoot.surahPickerOpen ? "#1a1a2e" : quranRoot.accentColor
+                    font.pixelSize: quranRoot.scaled(13); font.bold: true
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
                 Label {
                     text: quranRoot.surahPickerOpen ? "▲" : "▼"
-                    color: quranRoot.surahPickerOpen ? "#1a1a2e" : "#c9a84c"
-                    font.pixelSize: 10
+                    color: quranRoot.surahPickerOpen ? "#1a1a2e" : quranRoot.accentColor
+                    font.pixelSize: quranRoot.scaled(10)
                     anchors.verticalCenter: parent.verticalCenter
                     Behavior on color { ColorAnimation { duration: 200 } }
                 }
@@ -225,16 +275,16 @@ Rectangle {
                 model: ["Kanzul Iman", "Kanzul Irfan", "Sahih International", "Uthmani"]
                 delegate: Rectangle {
                     width: tLbl.implicitWidth + 14; height: 28; radius: 6
-                    color: quranRoot.selectedTranslation === modelData ? "#c9a84c" : "#1e3a6e"
-                    border.color: "#c9a84c"; border.width: 1
+                    color: quranRoot.selectedTranslation === modelData ? quranRoot.accentColor : "#1e3a6e"
+                    border.color: quranRoot.accentColor; border.width: 1
                     anchors.verticalCenter: parent.verticalCenter
                     Behavior on color { ColorAnimation { duration: 200 } }
                     scale: tMouse.pressed ? 0.92 : 1.0
                     Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
                     Label {
                         id: tLbl; text: modelData
-                        color: quranRoot.selectedTranslation === modelData ? "#1a1a2e" : "#c9a84c"
-                        font.pixelSize: 11; font.bold: true; anchors.centerIn: parent
+                        color: quranRoot.selectedTranslation === modelData ? "#1a1a2e" : quranRoot.accentColor
+                        font.pixelSize: quranRoot.scaled(11); font.bold: true; anchors.centerIn: parent
                         Behavior on color { ColorAnimation { duration: 200 } }
                     }
                     MouseArea { id: tMouse; anchors.fill: parent; onClicked: quranRoot.selectedTranslation = modelData }
@@ -248,9 +298,9 @@ Rectangle {
         id: toggleBar
         anchors.top: toolbar.bottom
         anchors.left: parent.left; anchors.right: parent.right
-        height: 38; color: "#0a1428"; z: 2
+        height: 38; color: settings !== null && !settings.darkMode ? "#f7ecd6" : "#0a1428"; z: 2
 
-        Rectangle { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: "#c9a84c"; opacity: 0.1 }
+        Rectangle { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: quranRoot.accentColor; opacity: 0.1 }
 
         Row {
             anchors.left: parent.left; anchors.leftMargin: 12
@@ -271,13 +321,13 @@ Rectangle {
                         return quranRoot.showTranslit
                     }
                     width: togLbl.implicitWidth + 16; height: 26; radius: 5
-                    color: active ? "#c9a84c22" : "transparent"
-                    border.color: active ? "#c9a84c" : "#2a3a5a"; border.width: 1
+                    color: active ? quranRoot.accentColor + "22" : "transparent"
+                    border.color: active ? quranRoot.accentColor : "#2a3a5a"; border.width: 1
                     anchors.verticalCenter: parent.verticalCenter
                     Behavior on color { ColorAnimation { duration: 200 } }
                     Label {
                         id: togLbl; text: modelData.label
-                        color: active ? "#c9a84c" : "#4a5a7a"; font.pixelSize: 11; font.bold: active
+                        color: active ? quranRoot.accentColor : "#4a5a7a"; font.pixelSize: quranRoot.scaled(11); font.bold: active
                         anchors.centerIn: parent
                         Behavior on color { ColorAnimation { duration: 200 } }
                     }
@@ -301,7 +351,7 @@ Rectangle {
         anchors.top: toggleBar.bottom
         anchors.left: parent.left; anchors.right: parent.right
         height: 48
-        color: "#0d1b36"
+        color: settings !== null && !settings.darkMode ? "#fff8e8" : "#0d1b36"
         z: 2
 
         Rectangle {
@@ -309,7 +359,7 @@ Rectangle {
             anchors.left: parent.left
             anchors.right: parent.right
             height: 1
-            color: "#c9a84c"
+            color: quranRoot.accentColor
             opacity: 0.12
         }
 
@@ -323,8 +373,8 @@ Rectangle {
 
             Label {
                 text: "Go to"
-                color: "#c9a84c"
-                font.pixelSize: 12
+                color: quranRoot.accentColor
+                font.pixelSize: quranRoot.scaled(12)
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -352,8 +402,8 @@ Rectangle {
                 }
                 color: "#ffffff"
                 selectedTextColor: "#1a1a2e"
-                selectionColor: "#c9a84c"
-                font.pixelSize: 13
+                selectionColor: quranRoot.accentColor
+                font.pixelSize: quranRoot.scaled(13)
                 anchors.verticalCenter: parent.verticalCenter
                 onAccepted: quranRoot.requestGoto()
             }
@@ -361,7 +411,7 @@ Rectangle {
             Label {
                 text: "of " + quranRoot.gotoMaximum(gotoTypeBox.currentValue)
                 color: "#8a9abf"
-                font.pixelSize: 12
+                font.pixelSize: quranRoot.scaled(12)
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -369,7 +419,7 @@ Rectangle {
                 width: 56
                 height: 32
                 radius: 7
-                color: goMouse.pressed ? "#b89236" : "#c9a84c"
+                color: goMouse.pressed ? "#b89236" : quranRoot.accentColor
                 border.color: "#e0c66a"
                 border.width: 1
                 anchors.verticalCenter: parent.verticalCenter
@@ -377,7 +427,7 @@ Rectangle {
                 Label {
                     text: "Go"
                     color: "#1a1a2e"
-                    font.pixelSize: 12
+                    font.pixelSize: quranRoot.scaled(12)
                     font.bold: true
                     anchors.centerIn: parent
                 }
@@ -393,7 +443,7 @@ Rectangle {
                 width: Math.max(0, parent.width - 430)
                 text: quranRoot.gotoStatus
                 color: quranRoot.gotoStatus.indexOf("Enter") === 0 || quranRoot.gotoStatus.indexOf("Could") === 0 ? "#ff9a9a" : "#7a8aaa"
-                font.pixelSize: 11
+                font.pixelSize: quranRoot.scaled(11)
                 elide: Text.ElideRight
                 anchors.verticalCenter: parent.verticalCenter
                 visible: width > 80
@@ -407,7 +457,7 @@ Rectangle {
         anchors.top: gotoBar.bottom
         anchors.left: parent.left; anchors.right: parent.right
         height: quranRoot.surahPickerOpen ? Math.min(300, quranRoot.height * 0.4) : 0
-        color: "#0d1b36"; z: 3; clip: true
+        color: settings !== null && !settings.darkMode ? "#fff8e8" : "#0d1b36"; z: 3; clip: true
         Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
         Rectangle { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: "#c9a84c"; opacity: 0.3 }

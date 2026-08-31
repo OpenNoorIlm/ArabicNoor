@@ -83,7 +83,34 @@ void PrayerTimesBackend::loadAddress(const QString &address)
     fetch(url, trimmedAddress);
 }
 
-void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
+void PrayerTimesBackend::loadAddressWithSettings(const QString &address,
+                                                 int calculationMethod,
+                                                 int asrSchool,
+                                                 int hijriOffset)
+{
+    const QString trimmedAddress = address.trimmed();
+    if (trimmedAddress.isEmpty())
+        return;
+
+    qDebug() << "PrayerTimesBackend::loadAddressWithSettings called with"
+             << trimmedAddress
+             << "method" << calculationMethod
+             << "school" << asrSchool
+             << "hijriOffset" << hijriOffset;
+
+    const QString datePath = QDate::currentDate().toString(QStringLiteral("dd-MM-yyyy"));
+    QUrl url(QStringLiteral("https://api.aladhan.com/v1/timingsByAddress/%1").arg(datePath));
+    QUrlQuery query;
+    query.addQueryItem(QStringLiteral("address"), trimmedAddress);
+    query.addQueryItem(QStringLiteral("method"), QString::number(calculationMethod));
+    query.addQueryItem(QStringLiteral("school"), QString::number(asrSchool));
+    query.addQueryItem(QStringLiteral("adjustment"), QString::number(hijriOffset));
+    url.setQuery(query);
+
+    fetch(url, trimmedAddress, hijriOffset);
+}
+
+void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation, int hijriOffset)
 {
     qDebug() << "PrayerTimesBackend fetching" << url;
 
@@ -96,7 +123,7 @@ void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
     request.setTransferTimeout(15000);
 
     auto *reply = m_network.get(request);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, displayLocation] {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, displayLocation, hijriOffset] {
         const QByteArray body = reply->readAll();
         const QNetworkReply::NetworkError networkError = reply->error();
         const QString networkErrorText = reply->errorString();
@@ -175,7 +202,7 @@ void PrayerTimesBackend::fetch(const QUrl &url, const QString &displayLocation)
         emit prayersChanged();
 
         setLocation(displayLocation);
-        setGregorianDate(date.value(QStringLiteral("readable")).toString());
+        setGregorianDate(date.value(QStringLiteral("readable")).toString(), hijriOffset);
 
         const QJsonObject hijri = date.value(QStringLiteral("hijri")).toObject();
         setHijriDate(hijri.value(QStringLiteral("day")).toString()
@@ -259,12 +286,18 @@ void PrayerTimesBackend::setHijriDate(const QString &hijriDate)
     emit hijriDateChanged();
 }
 
-void PrayerTimesBackend::setGregorianDate(const QString &gregorianDate)
+void PrayerTimesBackend::setGregorianDate(const QString &gregorianDate, int hijriOffset)
 {
-    if (m_gregorianDate == gregorianDate)
+    QString nextGregorianDate = gregorianDate;
+    if (hijriOffset != 0)
+        nextGregorianDate += tr(" • Hijri offset %1").arg(hijriOffset > 0
+                                                              ? QStringLiteral("+%1").arg(hijriOffset)
+                                                              : QString::number(hijriOffset));
+
+    if (m_gregorianDate == nextGregorianDate)
         return;
 
-    m_gregorianDate = gregorianDate;
+    m_gregorianDate = nextGregorianDate;
     emit gregorianDateChanged();
 }
 

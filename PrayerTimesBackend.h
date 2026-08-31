@@ -29,6 +29,10 @@ public:
 
     Q_INVOKABLE void loadCity(const QString &city, const QString &country = "India");
     Q_INVOKABLE void loadAddress(const QString &address);
+    Q_INVOKABLE void loadAddressWithSettings(const QString &address,
+                                             int calculationMethod,
+                                             int asrSchool,
+                                             int hijriOffset);
 
 signals:
     void prayersChanged();
@@ -41,10 +45,10 @@ signals:
 
 private:
     void loadFallback(const QString &displayLocation);
-    void fetch(const QUrl &url, const QString &displayLocation);
+    void fetch(const QUrl &url, const QString &displayLocation, int hijriOffset = 0);
     void setLocation(const QString &location);
     void setHijriDate(const QString &hijriDate);
-    void setGregorianDate(const QString &gregorianDate);
+    void setGregorianDate(const QString &gregorianDate, int hijriOffset = 0);
     void setCoordinates(double latitude, double longitude);
     void setError(const QString &error);
     void setLoading(bool loading);

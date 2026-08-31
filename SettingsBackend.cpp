@@ -3,6 +3,7 @@
 #include <QSettings>
 #include <QStringList>
 #include <QVariant>
+#include <QVariantMap>
 
 namespace {
 
@@ -35,6 +36,36 @@ QString nextValue(const QString &current, const QStringList &values)
         return values.first();
 
     return values.at(index + 1);
+}
+
+QString storageKeyForUiKey(const QString &key)
+{
+    if (key == QStringLiteral("accentColor"))
+        return QString::fromLatin1(kAccentColor);
+    if (key == QStringLiteral("fontSize"))
+        return QString::fromLatin1(kFontSize);
+    if (key == QStringLiteral("arabicFont"))
+        return QString::fromLatin1(kArabicFont);
+    if (key == QStringLiteral("defaultTranslation"))
+        return QString::fromLatin1(kDefaultTranslation);
+    if (key == QStringLiteral("arabicScript"))
+        return QString::fromLatin1(kArabicScript);
+    if (key == QStringLiteral("autoScrollSpeed"))
+        return QString::fromLatin1(kAutoScrollSpeed);
+    if (key == QStringLiteral("calculationMethod"))
+        return QString::fromLatin1(kCalculationMethod);
+    if (key == QStringLiteral("asrMethod"))
+        return QString::fromLatin1(kAsrMethod);
+    if (key == QStringLiteral("location"))
+        return QString::fromLatin1(kLocation);
+    if (key == QStringLiteral("adhanSound"))
+        return QString::fromLatin1(kAdhanSound);
+    if (key == QStringLiteral("appLanguage"))
+        return QString::fromLatin1(kAppLanguage);
+    if (key == QStringLiteral("hijriOffset"))
+        return QString::fromLatin1(kHijriOffset);
+
+    return {};
 }
 
 } // namespace
@@ -142,8 +173,118 @@ void SettingsBackend::setString(const QString &key, const QString &value)
     if (cleanValue.isEmpty())
         return;
 
-    if (key == QStringLiteral("location"))
-        setValue(QString::fromLatin1(kLocation), cleanValue);
+    const QString storageKey = storageKeyForUiKey(key);
+    if (!storageKey.isEmpty())
+        setValue(storageKey, cleanValue);
+}
+
+QVariantList SettingsBackend::optionValues(const QString &key) const
+{
+    QStringList values;
+
+    if (key == QStringLiteral("accentColor")) {
+        values = { QStringLiteral("#c9a84c"),
+                   QStringLiteral("#74d3ae"),
+                   QStringLiteral("#7aa2ff"),
+                   QStringLiteral("#e07a8d") };
+    } else if (key == QStringLiteral("fontSize")) {
+        values = { QStringLiteral("Small"),
+                   QStringLiteral("Medium"),
+                   QStringLiteral("Large"),
+                   QStringLiteral("Extra Large") };
+    } else if (key == QStringLiteral("arabicFont")) {
+        values = { QStringLiteral("System default"),
+                   QStringLiteral("Noto Naskh Arabic"),
+                   QStringLiteral("Amiri"),
+                   QStringLiteral("Scheherazade New") };
+    } else if (key == QStringLiteral("defaultTranslation")) {
+        values = { QStringLiteral("Kanzul Iman"),
+                   QStringLiteral("Kanzul Irfan"),
+                   QStringLiteral("Sahih International") };
+    } else if (key == QStringLiteral("arabicScript")) {
+        values = { QStringLiteral("Uthmani"),
+                   QStringLiteral("Simple") };
+    } else if (key == QStringLiteral("autoScrollSpeed")) {
+        values = { QStringLiteral("Off"),
+                   QStringLiteral("Slow"),
+                   QStringLiteral("Normal"),
+                   QStringLiteral("Fast") };
+    } else if (key == QStringLiteral("calculationMethod")) {
+        values = { QStringLiteral("Karachi"),
+                   QStringLiteral("Muslim World League"),
+                   QStringLiteral("Umm al-Qura"),
+                   QStringLiteral("Egyptian") };
+    } else if (key == QStringLiteral("asrMethod")) {
+        values = { QStringLiteral("Hanafi"),
+                   QStringLiteral("Standard") };
+    } else if (key == QStringLiteral("location")) {
+        values = { QStringLiteral("Mysuru, Karnataka, India"),
+                   QStringLiteral("Makkah, Saudi Arabia"),
+                   QStringLiteral("Madinah, Saudi Arabia"),
+                   QStringLiteral("Delhi, India") };
+    } else if (key == QStringLiteral("adhanSound")) {
+        values = { QStringLiteral("Makkah"),
+                   QStringLiteral("Madinah"),
+                   QStringLiteral("None") };
+    } else if (key == QStringLiteral("appLanguage")) {
+        values = { QStringLiteral("English"),
+                   QStringLiteral("Arabic"),
+                   QStringLiteral("Urdu") };
+    } else if (key == QStringLiteral("hijriOffset")) {
+        QVariantList offsets;
+        for (int offset = -2; offset <= 2; ++offset) {
+            QVariantMap option;
+            option.insert(QStringLiteral("label"), QStringLiteral("%1 days").arg(offset));
+            option.insert(QStringLiteral("value"), QString::number(offset));
+            offsets.append(option);
+        }
+
+        return offsets;
+    }
+
+    QVariantList options;
+    options.reserve(values.size());
+    for (const QString &value : values) {
+        QVariantMap option;
+        option.insert(QStringLiteral("label"), value);
+        option.insert(QStringLiteral("value"), value);
+        options.append(option);
+    }
+
+    return options;
+}
+
+int SettingsBackend::prayerCalculationMethodCode() const
+{
+    const QString method = calculationMethod();
+
+    if (method == QStringLiteral("Muslim World League"))
+        return 3;
+    if (method == QStringLiteral("Umm al-Qura"))
+        return 4;
+    if (method == QStringLiteral("Egyptian"))
+        return 5;
+
+    return 1;
+}
+
+int SettingsBackend::prayerAsrSchoolCode() const
+{
+    return asrMethod() == QStringLiteral("Hanafi") ? 1 : 0;
+}
+
+double SettingsBackend::fontScale() const
+{
+    const QString size = fontSize();
+
+    if (size == QStringLiteral("Small"))
+        return 0.88;
+    if (size == QStringLiteral("Large"))
+        return 1.16;
+    if (size == QStringLiteral("Extra Large"))
+        return 1.34;
+
+    return 1.0;
 }
 
 void SettingsBackend::cycleSetting(const QString &key)

@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QString>
 #include <QVariant>
+#include <QVariantList>
 
 class SettingsBackend : public QObject
 {
@@ -47,6 +48,10 @@ public:
 
     Q_INVOKABLE void setBool(const QString &key, bool value);
     Q_INVOKABLE void setString(const QString &key, const QString &value);
+    Q_INVOKABLE QVariantList optionValues(const QString &key) const;
+    Q_INVOKABLE int prayerCalculationMethodCode() const;
+    Q_INVOKABLE int prayerAsrSchoolCode() const;
+    Q_INVOKABLE double fontScale() const;
     Q_INVOKABLE void cycleSetting(const QString &key);
     Q_INVOKABLE void resetAll();
 

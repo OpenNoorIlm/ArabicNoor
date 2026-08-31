@@ -6,9 +6,11 @@ Rectangle {
     id: prayerRoot
     width: parent ? parent.width : Screen.width
     height: parent ? parent.height : Screen.height
-    color: "#1a1a2e"
+    color: settings !== null && !settings.darkMode ? "#f4efe2" : "#1a1a2e"
 
     property var settings: typeof settingsBackend !== "undefined" && settingsBackend !== null ? settingsBackend : null
+    readonly property string accentColor: settings !== null ? settings.accentColor : "#c9a84c"
+    readonly property real fontScale: settings !== null ? settings.fontScale() : 1.0
     property string locationText: settings !== null ? settings.location : "Mysuru, Karnataka, India"
     property bool locationSearchMode: false
     property string searchQuery: ""
@@ -34,7 +36,29 @@ Rectangle {
         interval: 1
         running: prayerRoot.backend !== null
         repeat: false
-        onTriggered: prayerRoot.backend.loadAddress(prayerRoot.locationText)
+        onTriggered: prayerRoot.reloadPrayerTimes()
+    }
+
+    Connections {
+        target: prayerRoot.settings
+        function onSettingsChanged() {
+            prayerRoot.locationText = prayerRoot.settings.location
+            prayerRoot.reloadPrayerTimes()
+        }
+    }
+
+    function reloadPrayerTimes() {
+        if (backend === null)
+            return
+
+        if (settings !== null) {
+            backend.loadAddressWithSettings(locationText,
+                                            settings.prayerCalculationMethodCode(),
+                                            settings.prayerAsrSchoolCode(),
+                                            settings.hijriOffset)
+        } else {
+            backend.loadAddress(locationText)
+        }
     }
 
     function loadPrayerLocation(value) {
@@ -45,11 +69,14 @@ Rectangle {
         prayerRoot.locationText = query
         prayerRoot.locationSearchMode = false
         prayerRoot.searchQuery = ""
-        if (settings !== null)
+        if (settings !== null) {
             settings.setString("location", query)
+            return
+        }
+
         console.log("PrayerTimesPage requested location:", query, "backend:", backend !== null)
         if (backend !== null)
-            backend.loadAddress(query)
+            reloadPrayerTimes()
     }
 
     function firstUpcomingPrayer() {
